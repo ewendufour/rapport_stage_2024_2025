@@ -1,0 +1,239 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage{fullpage}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[french]{babel} \frenchbsetup{og=«,fg=»}
+\usepackage{graphicx}
+\usepackage{amsthm}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{stmaryrd}
+\usepackage{proof}
+\usepackage{booktabs}
+
+
+\theoremstyle{definition}
+\newtheorem{definition}{Définition}[section]
+\newtheorem{theorem}{Théorème}[section]
+\newtheorem{lemma}[theorem]{Lemme}
+
+
+
+\title{Étude d'une mesure d'espace pour le lambda calcul}
+\author{Ewen DUFOUR\\[1ex]
+{\small Encadré par}\\ {\small Thibaut BALABONSKI}}
+\date{Stage de M1 MPRI\\mars--juillet 2025}
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+  Nous sommes beaux Quelque chose de bien orthographiée.
+\end{abstract}
+
+\tableofcontents
+\section{Introduction}
+\section{Le Linear Substitution Calculus}
+
+\begin{definition}[Linear Substitution Calculus]
+Les termes du LSC sont donnés par la grammaire~:
+\begin{align*}
+    t ::= x~|~t~t~|~\lambda x.t~|~t[x / t]
+\end{align*}
+Les règles de réduction sont~:
+\begin{center}
+\begin{tabular}{l l l l }
+$(\lambda x.t)Lu$ &$\mapsto_{d\beta}$ &$t[x / u]L$ & \\
+$\mathcal{C}\llbracket x \rrbracket [x / u]$ &$\mapsto_{ls}$ &$\mathcal{C}\llbracket u \rrbracket [x / u]$ & \\
+$t[x / u]$ &$\mapsto_{gc}$ &$t$ & if $x\notin fv(t)$
+\end{tabular}
+\end{center}
+ où $L$ est une liste de substitutions possiblement vide, $\mathcal{C}$ est un contexte et $fv(t)$ dénote les variables libres du terme $t$.
+\end{definition}
+\begin{definition}[Free variables]
+\begin{align*}
+    fv(x) &= \{ x \} \\
+    fv(\lambda x.t) &= fv(t) \setminus \{ x \} \\
+    fv(t~u) &= fv(t) \cup fv(u) \\
+    fv(t[x/u]) &= (fv(t) \setminus \{ x \}) \cup fv(u) \\
+\end{align*}
+\end{definition}
+
+\section{Le Weak Call By Value LSC}
+Nous considérons les termes suivant comme des valeurs~:
+\begin{align*}
+    v ::= (\lambda x.t)~|~v[x/t]
+\end{align*}
+\begin{definition}[Contextes de réductions]
+Nous définissons les contextes de réduction ainsi~:
+\begin{align*}
+    \mathcal{C} ::= \square~|~\mathcal{C}~t~|~v~\mathcal{C}~|~\mathcal{C}[x/t]
+\end{align*}
+Ou de manière équivalente :
+\begin{align*}
+    \mathcal{C} ::= \square~|~\mathcal{C}[\square~t]~|~\mathcal{C}[v~\square]~|~\mathcal{C}[\square[x/t]]
+\end{align*}
+\end{definition}
+\begin{figure}[!h]
+    \centering
+    \begin{align*}
+    &\infer[LA]{t~v\rightarrow t'~u}{t \rightarrow t'}
+ &\infer[RA]{v~t\rightarrow v~t'}{t \rightarrow t'}\\
+&\infer[GC]{t[x/u]\rightarrow t'}{t \rightarrow t' & x \notin fv(t') }
+&\infer[US]{t[x/u]\rightarrow t'[x/u]}{t \rightarrow t' & x \in fv(t')}\\
+&\infer[LS]{\mathcal{C}\llbracket x \rrbracket [x/u]\rightarrow \mathcal{C}\llbracket u \rrbracket [x/u]}{x \in fv(\mathcal{C}\llbracket u \rrbracket) }
+&\infer[LSGC]{\mathcal{C}\llbracket x \rrbracket [x/u]\rightarrow \mathcal{C}\llbracket u \rrbracket}{x \notin fv(\mathcal{C}\llbracket u \rrbracket) }\\
+&\infer[DB]{(\lambda x.t)L~v \rightarrow t[x/v]L}{x\in fv(t)}
+&\infer[DBGC]{(\lambda x.t)L~v \rightarrow tL}{x\notin fv(t)}
+\end{align*}
+    \caption{Règles de réduction du WCBVLSC}
+\end{figure}
+
+\begin{definition}[Propreté]
+\begin{align*}
+    cl(x) &= true\\
+    cl(\lambda x.t) &= cl(t)\\
+    cl(t~u) &= cl(t) \wedge cl(u)\\
+    cl(t[x/u]) &= cl(t) \wedge x\in fv(t) \wedge cl(u)
+\end{align*}
+Un terme est dit propre si et seulement si $cl(t)=true$.
+\end{definition}
+
+\begin{lemma}
+  Soient $\mathcal{C}$, $\mathcal{D}$ des contextes et $t$ un terme.
+  $\langle -,\mathcal{C}[t], \mathcal{D}\rangle_0 \rightsquigarrow^* \langle -,t,\mathcal{C} :: \mathcal{D}\rangle_0$
+\end{lemma}
+\begin{proof}
+  Par induction sur la forme de $\mathcal{C}$.\\
+  \underbar{Cas $\mathcal{C} = \square$~:} immédiat.\\
+  \underbar{Cas $\mathcal{C} = \mathcal{C}_1[x/v]$~:}\\
+  \begin{align*}
+    \langle -, \mathcal{C}[t], \mathcal{D}\rangle_0 = &\langle -, \mathcal{C}_1[t][x/v], \mathcal{D}\rangle_0 \\
+    \rightsquigarrow_{us} &\langle -, \mathcal{C}_1[t], \square[x/v]:: \mathcal{D}\rangle_0 \\
+    \rightsquigarrow^* &\langle -, t, \mathcal{C}_1:: \square[x/v]:: \mathcal{D}\rangle_0 \quad \text{Par hypothèse d'induction.}
+  \end{align*}
+  \underbar{Cas $\mathcal{C} = \mathcal{C}_1~u$~:}\\
+  \begin{align*}
+    \langle -, \mathcal{C}[t], \mathcal{D}\rangle_0 = &\langle -, \mathcal{C}_1[t]~u, \mathcal{D}\rangle_0 \\
+    \rightsquigarrow_{lapp} &\langle -, \mathcal{C}_1[t], \square~u:: \mathcal{D}\rangle_0 \\
+    \rightsquigarrow^* &\langle -, t, \mathcal{C}_1:: \square~u:: \mathcal{D}\rangle_0 \quad \text{Par hypothèse d'induction.}
+  \end{align*}
+  \underbar{Cas $\mathcal{C} = v~\mathcal{C}_1$~:}\\
+  \begin{align*}
+    \langle -, \mathcal{C}[t], \mathcal{D}\rangle_0 = &\langle -, v~\mathcal{C}_1[t], \mathcal{D}\rangle_0 \\
+    \rightsquigarrow_{lapp} &\langle -, \mathcal{C}_1[t], v~\square:: \mathcal{D}\rangle_0 \\
+    \rightsquigarrow^* &\langle -, t, \mathcal{C}_1:: v~\square:: \mathcal{D}\rangle_0 \quad \text{Par hypothèse d'induction.}
+  \end{align*}
+\end{proof}
+
+\begin{lemma}
+  Soient $\mathcal{C}$ et $\mathcal{D}$ des contextes et $t$ un terme.
+  $\mathcal{C}[t]$ propre $\Rightarrow \langle -, t, \mathcal{C}:: \mathcal{D}\rangle_2 \rightsquigarrow^* \langle -, \mathcal{C}[t], \mathcal{D}\rangle_2$
+\end{lemma}
+\begin{proof}
+  Par induction sur la forme de $\mathcal{C}$.\\
+  \underbar{Cas $\mathcal{C} = \square$~:} immédiat.\\
+  \underbar{Cas $\mathcal{C} = \mathcal{C}_1[x/v]$~:}\\
+  Nous avons~:
+    \begin{align*}
+    \mathcal{C}[t]~\text{propre} &\Leftrightarrow \mathcal{C}_1[t][x/v]~\text{propre}\\
+ &\Leftrightarrow x\in fv(\mathcal{C}_1[t]) \wedge \mathcal{C}_1[t]~\text{propre}
+  \end{align*}
+  Et par conséquent~:
+  \begin{align*}
+    \langle -, t, \mathcal{C} :: \mathcal{D}\rangle_2 = &\langle -, t, \mathcal{C}_1[x/v]:: \mathcal{D}\rangle_2 \\
+    = &\langle -, t, \mathcal{C}_1:: \square[x/v] :: \mathcal{D}\rangle_2 \\
+    \rightsquigarrow^* &\langle -, \mathcal{C}_1[t], \square[x/v]:: \mathcal{D}\rangle_2 \quad \text{Par hypothèse d'induction.}\\
+    \rightsquigarrow_{bsubst} &\langle -, \mathcal{C}_1[t][x/v], \mathcal{D}\rangle_2 \quad \text{Car}~x\in fv(\mathcal{C}_1[t])
+  \end{align*}
+  \underbar{Cas $\mathcal{C} = \mathcal{C}_1~u$~:}\\
+  Nous avons~:
+    \begin{align*}
+    \mathcal{C}[t]~\text{propre} &\Leftrightarrow \mathcal{C}_1[t]~u~\text{propre}\\
+ &\Rightarrow \mathcal{C}_1[t]~\text{propre}
+  \end{align*}
+  Ce qui nous donne~:
+  \begin{align*}
+    \langle -, t, \mathcal{C} :: \mathcal{D}\rangle_2 = &\langle -, t, \mathcal{C}_1~u:: \mathcal{D}\rangle_2 \\
+    = &\langle -, t, \mathcal{C}_1:: \square~u :: \mathcal{D}\rangle_2 \\
+    \rightsquigarrow^* &\langle -, \mathcal{C}_1[t], \square[x/v]:: \mathcal{D}\rangle_2 \quad \text{Par hypothèse d'induction.}\\
+    \rightsquigarrow_{blapp} &\langle -, \mathcal{C}_1[t]~u, \mathcal{D}\rangle_2 \quad \text{Par propreté de}~\mathcal{C}
+  \end{align*}
+  \underbar{Cas $\mathcal{C} = v~\mathcal{C}_1$~:} Analogue au cas précédent.\\
+\end{proof}
+
+
+
+
+\section{Le Space Calculus}
+
+\begin{definition}[Termes du Space Calculus]
+Le Space calcul est défini par les termes donnés par la grammaire suivante~:
+\begin{align*}
+    l ::&= x \\
+    &|~\lambda x.a \\
+    &|~a~a\\
+    a ::&= l^{\alpha}\\
+    c ::&= a\\
+        &|~c[x/c]\\
+    t ::&= c\\
+        &|~t~c
+\end{align*}
+ainsi que par les règles de réductions~:
+\begin{align*}
+&\infer[sea_v]{((t^\beta~x^\gamma)^\alpha e) \rightarrow (t^\beta e_{|t})~e(x)}{}
+&\infer[sea_{\neg v}]{((t^\beta~u^\gamma)^\alpha e) \rightarrow (t^\beta e_{|t})~(u^\gamma e_{|u}) }{}\\\\
+&\infer[\beta_{\neg w}]{((\lambda x .t^\beta)^\alpha e_t)~(u^\gamma e_u ) \rightarrow (t^\beta[x/u^\gamma e_u]e_t)}{x \in fv(t) }
+&\infer[\beta_w]{((\lambda x .t^\beta)^\alpha e_t)~(u^\gamma e_u ) \rightarrow (t^\beta e_t)}{x \notin fv(t) }\\\\
+&\infer[sub]{x^\alpha[x/u^\beta e] \rightarrow u^\beta e}{}
+&\infer[cont]{\mathcal{C}[t] \rightarrow \mathcal{C}[t']}{t\rightarrow t'}
+\end{align*}
+où $e_{|t}$ dénote la restriction de l'environnement $e$ aux variables libres de $t$ et 
+$\mathcal{C}$ est un contexte de réduction de la forme~:
+\begin{align*}
+  \mathcal{C} ::= \square~|~\mathcal{C}~c.
+\end{align*}
+
+\end{definition}
+\begin{definition}[Restriction d'un environnement]
+\begin{align*}
+a_{|t} &= a\\
+    (e[x/c])_{|t} &= e_{|t}[x/c] \quad &\text{si } x\in fv(t)\\
+    (e[x/c])_{|t} &= e_{|t} \quad &\text{si } x\notin fv(t)
+\end{align*}
+\end{definition}
+
+\section*{Annexe}
+
+\begin{figure}[ht]
+\centering
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{@{}l l l l l l l l l l@{}}
+\toprule
+\textbf{arg} & \textbf{terme} & \textbf{contexte} & \textbf{état} & \textbf{transition}& \textbf{arg} & \textbf{terme} & \textbf{contexte} & \textbf{état} \\
+\midrule
+
+– & $t[ u ] $ & $C$ & 0 & $\rightarrow_{us}$ & – & $t$ & $\textsf{LS}(u) :: C$ & 0  \\
+
+- & $t~u$ & $C$ & 0 & $\rightarrow_{lapp}$ & – & $t$ & $\textsf{RA}(u) :: C$ & 0  \\
+- & $v~t$ & $C$ & 0 & $\rightarrow_{rapp}$ & – & $t$ & $\textsf{LA}(v) :: C$ & 0  \\
+- & $n$  & $C$ & 0 & $\rightarrow_{ls}$ & - & $\uparrow^{n+1} t$ & $C$ & 2 & $\textsf{LS}(t)=\textsf{nth\_subst}(C)$ \\
+- & $v_1~v_2$  & $C$ & 0 & $\rightarrow_{db}$ & $(v_2,0)$ & $v_1$ & $C$ & 1  \\
+
+$(v_2, n)$ & $v_1[ t ]$ &$C$ & 1 & $\rightarrow_{rdb}$ & $(v_2, n+1)$ & $v_1$ & $\textsf{LS}(t) :: C$ & 1\\ 
+$(v, n)$ & $\lambda.t $ &$C$ & 1 & $\rightarrow_{fdb}$ & - & $t$ & $\textsf{LS}(\uparrow^{n}v) :: C$ & 2\\
+
+-&$v$ & $[]$ & 2 & $\rightarrow_{stop}$ & -& $v$ &$[]$ & 3 \\
+-&$t$ & $[]$ & 2 & $\rightarrow_{dive}$ & -& $t$ &$[]$ & 0 \\
+-&$t$ & $\textsf{LS}(u) :: C$ & 2 & $\rightarrow_{gc}$ & -& $\downarrow t$ &$C$ & 2 & $0\notin \textsf{fv}(t)$ \\
+-&$t$ & $\textsf{LS}(u) :: C$ & 2 & $\rightarrow_{bsubst}$ & -& $t[ u ]$ &$C$ & 2 & $0\in \textsf{fv}(t)$ \\
+-&$t$ & $\textsf{RA}(u) :: C$ & 2 & $\rightarrow_{blapp}$ & -& $t~u$ &$C$ & 2 \\
+-&$t$ & $\textsf{LA}(u) :: C$ & 2 & $\rightarrow_{brapp}$ & -& $u~t$ &$C$ & 2 \\
+
+\bottomrule
+\end{tabular}
+}
+\caption{Transitions de la FLAME.}
+\end{figure}
+\end{document}
+
