@@ -99,71 +99,132 @@ Ou de manière équivalente :
 Un terme est dit propre si et seulement si $cl(t)=true$.
 \end{definition}
 
-\begin{lemma}
+\begin{lemma}[Plongeon]
   Soient $\mathcal{C}$, $\mathcal{D}$ des contextes et $t$ un terme.
-  $\langle -,\mathcal{C}[t], \mathcal{D}\rangle_0 \rightsquigarrow^* \langle -,t,\mathcal{C} :: \mathcal{D}\rangle_0$
+\[\langle -,\mathcal{C}[t], \mathcal{D}\rangle_0 \rightsquigarrow^* \langle -,t,\mathcal{C} :: \mathcal{D}\rangle_0\]
 \end{lemma}
 \begin{proof}
-  Par induction sur la forme de $\mathcal{C}$.\\
-  \underbar{Cas $\mathcal{C} = \square$~:} immédiat.\\
-  \underbar{Cas $\mathcal{C} = \mathcal{C}_1[x/v]$~:}\\
+  Par induction sur la forme de $\mathcal{C}$.
+  \begin{itemize}
+    \item \underbar{Cas $\mathcal{C} = \square$~:} immédiat.\\
+    \item \underbar{Cas $\mathcal{C} = \mathcal{C}_1[x/v]$~:}\\
   \begin{align*}
     \langle -, \mathcal{C}[t], \mathcal{D}\rangle_0 = &\langle -, \mathcal{C}_1[t][x/v], \mathcal{D}\rangle_0 \\
     \rightsquigarrow_{us} &\langle -, \mathcal{C}_1[t], \square[x/v]:: \mathcal{D}\rangle_0 \\
     \rightsquigarrow^* &\langle -, t, \mathcal{C}_1:: \square[x/v]:: \mathcal{D}\rangle_0 \quad \text{Par hypothèse d'induction.}
   \end{align*}
-  \underbar{Cas $\mathcal{C} = \mathcal{C}_1~u$~:}\\
+    \item \underbar{Cas $\mathcal{C} = \mathcal{C}_1~u$~:}\\
   \begin{align*}
     \langle -, \mathcal{C}[t], \mathcal{D}\rangle_0 = &\langle -, \mathcal{C}_1[t]~u, \mathcal{D}\rangle_0 \\
     \rightsquigarrow_{lapp} &\langle -, \mathcal{C}_1[t], \square~u:: \mathcal{D}\rangle_0 \\
     \rightsquigarrow^* &\langle -, t, \mathcal{C}_1:: \square~u:: \mathcal{D}\rangle_0 \quad \text{Par hypothèse d'induction.}
   \end{align*}
-  \underbar{Cas $\mathcal{C} = v~\mathcal{C}_1$~:}\\
+    \item \underbar{Cas $\mathcal{C} = v~\mathcal{C}_1$~:}\\
   \begin{align*}
     \langle -, \mathcal{C}[t], \mathcal{D}\rangle_0 = &\langle -, v~\mathcal{C}_1[t], \mathcal{D}\rangle_0 \\
     \rightsquigarrow_{lapp} &\langle -, \mathcal{C}_1[t], v~\square:: \mathcal{D}\rangle_0 \\
     \rightsquigarrow^* &\langle -, t, \mathcal{C}_1:: v~\square:: \mathcal{D}\rangle_0 \quad \text{Par hypothèse d'induction.}
   \end{align*}
+  \end{itemize}
 \end{proof}
 
-\begin{lemma}
+\begin{lemma}[Reconstruction]
   Soient $\mathcal{C}$ et $\mathcal{D}$ des contextes et $t$ un terme.
-  $\mathcal{C}[t]$ propre $\Rightarrow \langle -, t, \mathcal{C}:: \mathcal{D}\rangle_2 \rightsquigarrow^* \langle -, \mathcal{C}[t], \mathcal{D}\rangle_2$
+  \[\mathcal{C}[t]~\text{propre}~\Rightarrow \langle-,t,\mathcal{C}::\mathcal{D}\rangle_2 \rightsquigarrow^* \langle-,\mathcal{C}[t],\mathcal{D}\rangle_2\]
 \end{lemma}
 \begin{proof}
-  Par induction sur la forme de $\mathcal{C}$.\\
-  \underbar{Cas $\mathcal{C} = \square$~:} immédiat.\\
-  \underbar{Cas $\mathcal{C} = \mathcal{C}_1[x/v]$~:}\\
-  Nous avons~:
-    \begin{align*}
-    \mathcal{C}[t]~\text{propre} &\Leftrightarrow \mathcal{C}_1[t][x/v]~\text{propre}\\
- &\Leftrightarrow x\in fv(\mathcal{C}_1[t]) \wedge \mathcal{C}_1[t]~\text{propre}
-  \end{align*}
-  Et par conséquent~:
-  \begin{align*}
-    \langle -, t, \mathcal{C} :: \mathcal{D}\rangle_2 = &\langle -, t, \mathcal{C}_1[x/v]:: \mathcal{D}\rangle_2 \\
-    = &\langle -, t, \mathcal{C}_1:: \square[x/v] :: \mathcal{D}\rangle_2 \\
-    \rightsquigarrow^* &\langle -, \mathcal{C}_1[t], \square[x/v]:: \mathcal{D}\rangle_2 \quad \text{Par hypothèse d'induction.}\\
-    \rightsquigarrow_{bsubst} &\langle -, \mathcal{C}_1[t][x/v], \mathcal{D}\rangle_2 \quad \text{Car}~x\in fv(\mathcal{C}_1[t])
-  \end{align*}
-  \underbar{Cas $\mathcal{C} = \mathcal{C}_1~u$~:}\\
-  Nous avons~:
-    \begin{align*}
-    \mathcal{C}[t]~\text{propre} &\Leftrightarrow \mathcal{C}_1[t]~u~\text{propre}\\
- &\Rightarrow \mathcal{C}_1[t]~\text{propre}
-  \end{align*}
-  Ce qui nous donne~:
-  \begin{align*}
-    \langle -, t, \mathcal{C} :: \mathcal{D}\rangle_2 = &\langle -, t, \mathcal{C}_1~u:: \mathcal{D}\rangle_2 \\
-    = &\langle -, t, \mathcal{C}_1:: \square~u :: \mathcal{D}\rangle_2 \\
-    \rightsquigarrow^* &\langle -, \mathcal{C}_1[t], \square[x/v]:: \mathcal{D}\rangle_2 \quad \text{Par hypothèse d'induction.}\\
-    \rightsquigarrow_{blapp} &\langle -, \mathcal{C}_1[t]~u, \mathcal{D}\rangle_2 \quad \text{Par propreté de}~\mathcal{C}
-  \end{align*}
-  \underbar{Cas $\mathcal{C} = v~\mathcal{C}_1$~:} Analogue au cas précédent.\\
+  Par induction sur la forme de $\mathcal{C}$.
+  \begin{itemize}
+    \item \underbar{Cas $\mathcal{C} = \square$~:} immédiat.
+    \item \underbar{Cas $\mathcal{C} = \mathcal{C}_1[x/v]$~:}\\
+      Nous avons~:
+      \begin{align*}
+      \mathcal{C}[t]~\text{propre} &\Leftrightarrow \mathcal{C}_1[t][x/v]~\text{propre}\\
+      &\Leftrightarrow x\in fv(\mathcal{C}_1[t]) \wedge \mathcal{C}_1[t]~\text{propre}
+      \end{align*}
+      Et par conséquent~:
+      \begin{align*}
+        \langle -, t, \mathcal{C} :: \mathcal{D}\rangle_2 = &\langle -, t, \mathcal{C}_1[x/v]:: \mathcal{D}\rangle_2 \\
+        = &\langle -, t, \mathcal{C}_1:: \square[x/v] :: \mathcal{D}\rangle_2 \\
+        \rightsquigarrow^* &\langle -, \mathcal{C}_1[t], \square[x/v]:: \mathcal{D}\rangle_2 \quad &\text{Par hypothèse d'induction.}\\
+        \rightsquigarrow_{bsubst} &\langle -, \mathcal{C}_1[t][x/v], \mathcal{D}\rangle_2 \quad &\text{Car}~x\in fv(\mathcal{C}_1[t])
+      \end{align*}
+    \item \underbar{Cas $\mathcal{C} = \mathcal{C}_1~u$~:}\\
+      Nous avons~:
+      \begin{align*}
+        \mathcal{C}[t]~\text{propre} &\Leftrightarrow \mathcal{C}_1[t]~u~\text{propre}\\
+        &\Rightarrow \mathcal{C}_1[t]~\text{propre}
+      \end{align*}
+      Ce qui nous donne~:
+      \begin{align*}
+        \langle -, t, \mathcal{C} :: \mathcal{D}\rangle_2 = &\langle -, t, \mathcal{C}_1~u:: \mathcal{D}\rangle_2 \\
+        = &\langle -, t, \mathcal{C}_1:: \square~u :: \mathcal{D}\rangle_2 \\
+        \rightsquigarrow^* &\langle -, \mathcal{C}_1[t], \square~u:: \mathcal{D}\rangle_2 \quad &\text{Par hypothèse d'induction.}\\
+        \rightsquigarrow_{blapp} &\langle -, \mathcal{C}_1[t]~u, \mathcal{D}\rangle_2 \quad &\text{Par propreté de}~\mathcal{C}
+      \end{align*}
+    \item \underbar{Cas $\mathcal{C} = v~\mathcal{C}_1$~:} Analogue au cas précédent.
+  \end{itemize}
+\end{proof}
+\begin{lemma}[Préservation des substitutions]
+  Soient $\mathcal{C}$ un contexte, $x$ et $y$ des variables et t un terme.
+  \[
+    y \neq x~\wedge~y\in fv(\mathcal{C}[x]) \Rightarrow y \in fv(\mathcal{C}[t])
+  \]
+\end{lemma}
+\begin{proof}
+Par induction sur la forme de $\mathcal{C}$
+ \begin{itemize}
+    \item \underbar{Cas $\mathcal{C} = \square$~:} Prémisse fausse.
+    \item \underbar{Cas $\mathcal{C} = \mathcal{C}_1[z/v]$~:}\\
+      Comme $y\in fv(\mathcal{C}[x])$, nous avons deux cas.
+      \begin{itemize}
+        \item \underbar{Cas $y \in fv(v)$~:}\\ 
+          En particulier, $y \in fv(\mathcal{C}_1[t][z/v]) \Leftrightarrow y \in fv(\mathcal{C}[t])$
+        \item \underbar{Cas $y\in fv(\mathcal{C}_1[x]) \wedge y \neq z$~:}\\
+          Par hypothèse d'induction, $y\in fv(\mathcal{C}_1[t])$.\\
+          Comme $y \neq z$, $y\in fv(\mathcal{C}_1[t][z/v]) \Leftrightarrow y \in fv(\mathcal{C}[t]$ 
+      \end{itemize}
+    \item \underbar{Cas $\mathcal{C} = \mathcal{C}_1~u$~:}\\
+      De nouveau, nous avons deux cas.
+      \begin{itemize}
+        \item \underbar{Cas $y \in fv(u)$~:}\\
+          $ y \in fv(\mathcal{C}[t]~u) \Leftrightarrow y \in fv(\mathcal{C}[t])$
+        \item \underbar{Cas $y \in fv(\mathcal{C}_1[x])$~:}
+          Par hypothèse d'induction, $y \in fv(\mathcal{C}_1[t])$\\ 
+          Donc, $y \in fv(\mathcal{C}_1[t]~u) \Leftrightarrow y \in fv(\mathcal{C}[t])$
+      \end{itemize}
+    \item \underbar{Cas $\mathcal{C} = v~\mathcal{C}_1$~:} Analogue au cas précédent.
+
+  \end{itemize} 
 \end{proof}
 
-
-
+\begin{lemma}[Propreté des substitutions]
+ Soient $\mathcal{C}$ un contexte, $t$ un terme et $x$ une variable.
+\[\mathcal{C}\llbracket x \rrbracket~\text{propre}~\wedge~t~\text{propre}~\Rightarrow \mathcal{C}[t]~\text{propre}\]
+\end{lemma}
+\begin{proof}
+  Par induction sur la forme de $\mathcal{C}$.
+  \begin{itemize}
+    \item \underbar{Cas $\mathcal{C} = \square$~:} trivial.
+    \item \underbar{Cas $\mathcal{C} = \mathcal{C}_1[y/v]$~:}\\
+      Comme $\mathcal{C}\llbracket x\rrbracket$ est propre, $\mathcal{C}_1\llbracket x \rrbracket$ et $v$ sont propres et $y\in fv(\mathcal{C}_1\llbracket x\rrbracket)$.
+      En particulier, $x \neq y$, car $x$ est supposé libre dans $\mathcal{C}\llbracket x \rrbracket$.
+      Par conséquence du lemme de préservation des substitutions, $y \in fv(\mathcal{C}_1[t])$.\\
+      Par hypothèse d'induction, nous avons $\mathcal{C}_1[t]$ propre.\\
+      Donc $\mathcal{C}[t]$ est propre.
+    \item \underbar{Cas $\mathcal{C} = \mathcal{C}_1~u$~:}\\
+      Nous avons~:
+      \begin{align*}
+        \mathcal{C}[t]~\text{propre} &\Leftrightarrow \mathcal{C}_1[t]~u~\text{propre}\\
+        &\Rightarrow \mathcal{C}_1[t]~\text{propre}
+      \end{align*}
+      Ce qui nous donne~:
+      \begin{align*}
+        OOPS
+      \end{align*}
+    \item \underbar{Cas $\mathcal{C} = v~\mathcal{C}_1$~:} Analogue au cas précédent.
+  \end{itemize}
+\end{proof}
 
 \section{Le Space Calculus}
 
