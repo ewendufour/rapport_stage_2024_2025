@@ -64,14 +64,14 @@ Nous considérons les termes suivant comme des valeurs~:
 \begin{align*}
     v ::= (\lambda x.t)~|~v[x/t]
 \end{align*}
-\begin{definition}[Contextes de réductions]
-Nous définissons les contextes de réduction ainsi~:
+\begin{definition}[Contextes de substitution]
 \begin{align*}
     \mathcal{C} ::= \square~|~\mathcal{C}~t~|~v~\mathcal{C}~|~\mathcal{C}[x/t]
 \end{align*}
-Ou de manière équivalente :
+\end{definition}
+\begin{definition}[Contextes d'application]
 \begin{align*}
-    \mathcal{C} ::= \square~|~\mathcal{C}[\square~t]~|~\mathcal{C}[v~\square]~|~\mathcal{C}[\square[x/t]]
+  \mathcal{L} ::= \square~|~\mathcal{L}[x/v]
 \end{align*}
 \end{definition}
 \begin{figure}[!h]
@@ -83,8 +83,8 @@ Ou de manière équivalente :
 &\infer[US]{t[x/u]\rightarrow t'[x/u]}{t \rightarrow t' & x \in fv(t')}\\
 &\infer[LS]{\mathcal{C}\llbracket x \rrbracket [x/u]\rightarrow \mathcal{C}\llbracket u \rrbracket [x/u]}{x \in fv(\mathcal{C}\llbracket u \rrbracket) }
 &\infer[LSGC]{\mathcal{C}\llbracket x \rrbracket [x/u]\rightarrow \mathcal{C}\llbracket u \rrbracket}{x \notin fv(\mathcal{C}\llbracket u \rrbracket) }\\
-&\infer[DB]{(\lambda x.t)L~v \rightarrow t[x/v]L}{x\in fv(t)}
-&\infer[DBGC]{(\lambda x.t)L~v \rightarrow tL}{x\notin fv(t)}
+&\infer[DB]{\mathcal{L}[\lambda x.t]~v \rightarrow \mathcal{L}[t[x/v]]}{x\in fv(t)}
+&\infer[DBGC]{\mathcal{L}[\lambda x.t]~v \rightarrow \mathcal{L}[t]}{x\notin fv(t)}
 \end{align*}
     \caption{Règles de réduction du WCBVLSC}
 \end{figure}
@@ -100,7 +100,7 @@ Un terme est dit propre si et seulement si $cl(t)=true$.
 \end{definition}
 
 \begin{lemma}[Plongeon]
-  Soient $\mathcal{C}$, $\mathcal{D}$ des contextes et $t$ un terme.
+  Soient $\mathcal{C}$, $\mathcal{D}$ des contextes de substitution et $t$ un terme.
 \[\langle -,\mathcal{C}[t], \mathcal{D}\rangle_0 \rightsquigarrow^* \langle -,t,\mathcal{C} :: \mathcal{D}\rangle_0\]
 \end{lemma}
 \begin{proof}
@@ -129,7 +129,7 @@ Un terme est dit propre si et seulement si $cl(t)=true$.
 \end{proof}
 
 \begin{lemma}[Reconstruction]
-  Soient $\mathcal{C}$ et $\mathcal{D}$ des contextes et $t$ un terme.
+  Soient $\mathcal{C}$ et $\mathcal{D}$ des contextes de substitution et $t$ un terme.
   \[\mathcal{C}[t]~\text{propre}~\Rightarrow \langle-,t,\mathcal{C}::\mathcal{D}\rangle_2 \rightsquigarrow^* \langle-,\mathcal{C}[t],\mathcal{D}\rangle_2\]
 \end{lemma}
 \begin{proof}
@@ -166,7 +166,7 @@ Un terme est dit propre si et seulement si $cl(t)=true$.
   \end{itemize}
 \end{proof}
 \begin{lemma}[Préservation des substitutions]
-  Soient $\mathcal{C}$ un contexte, $x$ et $y$ des variables et t un terme.
+  Soient $\mathcal{C}$ un contexte de substitution, $x$ et $y$ des variables et t un terme.
   \[
     y \neq x~\wedge~y\in fv(\mathcal{C}[x]) \Rightarrow y \in fv(\mathcal{C}[t])
   \]
@@ -194,12 +194,11 @@ Par induction sur la forme de $\mathcal{C}$
           Donc, $y \in fv(\mathcal{C}_1[t]~u) \Leftrightarrow y \in fv(\mathcal{C}[t])$
       \end{itemize}
     \item \underbar{Cas $\mathcal{C} = v~\mathcal{C}_1$~:} Analogue au cas précédent.
-
   \end{itemize} 
 \end{proof}
 
 \begin{lemma}[Propreté des substitutions]
- Soient $\mathcal{C}$ un contexte, $t$ un terme et $x$ une variable.
+ Soient $\mathcal{C}$ un contexte de substitution, $t$ un terme et $x$ une variable.
 \[\mathcal{C}\llbracket x \rrbracket~\text{propre}~\wedge~t~\text{propre}~\Rightarrow \mathcal{C}[t]~\text{propre}\]
 \end{lemma}
 \begin{proof}
@@ -212,17 +211,33 @@ Par induction sur la forme de $\mathcal{C}$
       Par conséquence du lemme de préservation des substitutions, $y \in fv(\mathcal{C}_1[t])$.\\
       Par hypothèse d'induction, nous avons $\mathcal{C}_1[t]$ propre.\\
       Donc $\mathcal{C}[t]$ est propre.
-    \item \underbar{Cas $\mathcal{C} = \mathcal{C}_1~u$~:}\\
-      Nous avons~:
-      \begin{align*}
-        \mathcal{C}[t]~\text{propre} &\Leftrightarrow \mathcal{C}_1[t]~u~\text{propre}\\
-        &\Rightarrow \mathcal{C}_1[t]~\text{propre}
-      \end{align*}
-      Ce qui nous donne~:
-      \begin{align*}
-        OOPS
-      \end{align*}
+    \item \underbar{Cas $\mathcal{C} = \mathcal{C}_1~u$~:}
+      Par la propreté de $\mathcal{C}\llbracket x \rrbracket$, nous déduisons que $u$ et $\mathcal{C}_1\llbracket x \rrbracket$ sont propres.
+      Notre hypothèse d'induction nous donne $\mathcal{C}_1[t]$ propre. 
+      Nous déduisons que $\mathcal{C}[t] = \mathcal{C}_1[t]~u$ est propre.
     \item \underbar{Cas $\mathcal{C} = v~\mathcal{C}_1$~:} Analogue au cas précédent.
+  \end{itemize}
+\end{proof}
+
+\begin{lemma}
+  \label{lemma0}
+  Soient $\mathcal{L}$ un contexte d'application, $t$ un term et $x$ une variable.
+  \[ 
+    x \in fv(\mathcal{L}[\lambda y.t]) \Rightarrow x \in fv(\mathcal{L}[t])
+  \]
+\end{lemma}
+\begin{proof}
+  Par induction sur la forme de $\mathcal{L}$.
+  \begin{itemize}
+    \item \underbar{Cas $\mathcal{L} = \square$~:} Immédiat.
+    \item \underbar{Cas $\mathcal{L}=\mathcal{L}_1[z/v]$~:}\\
+      Comme $x\in fv(\mathcal{L}[\lambda y.t]) \Leftrightarrow x \in fv((\mathcal{L}_1[\lambda y.t])[z/v])$, nous avons deux cas.
+      \begin{itemize}
+        \item \underbar{Cas $x\in fv(v)$~:} Trivialement, $x \in fv((\mathcal{L}_1[t])[z/v]) \Leftrightarrow x\in fv(\mathcal{L}[t])$
+        \item \underbar{Cas $x\in fv(\mathcal{L}_1[\lambda y.t])\wedge x \neq z$~:}
+          Par hypothèse d'induction, $x\in fv(\mathcal{L}_1[t])$.
+          Nous déduisons $x \in fv((\mathcal{L}_1[t])[z/v]) \Leftrightarrow x\in fv(\mathcal{L}[t])$.
+      \end{itemize}
   \end{itemize}
 \end{proof}
 
