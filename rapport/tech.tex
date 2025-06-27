@@ -5,6 +5,7 @@
 \usepackage[french]{babel} \frenchbsetup{og=«,fg=»}
 \usepackage{graphicx}
 \usepackage{amsthm}
+\usepackage{hyperref}
 \usepackage{amsmath}
 \usepackage{amssymb}
 \usepackage{stmaryrd}
@@ -17,6 +18,9 @@
 \newtheorem{theorem}{Théorème}[section]
 \newtheorem{lemma}[theorem]{Lemme}
 
+\newcommand{\etat}[1]{\langle #1 \rangle}
+\newcommand{\mtd}{\mathcal{D}}
+\newcommand{\mt}{\mathcal{C}}
 
 
 \title{Étude d'une mesure d'espace pour le lambda calcul}
@@ -77,7 +81,7 @@ Nous considérons les termes suivant comme des valeurs~:
 \begin{figure}[!h]
     \centering
     \begin{align*}
-    &\infer[LA]{t~v\rightarrow t'~u}{t \rightarrow t'}
+    &\infer[LA]{t~u\rightarrow t'~u}{t \rightarrow t'}
  &\infer[RA]{v~t\rightarrow v~t'}{t \rightarrow t'}\\
 &\infer[GC]{t[x/u]\rightarrow t'}{t \rightarrow t' & x \notin fv(t') }
 &\infer[US]{t[x/u]\rightarrow t'[x/u]}{t \rightarrow t' & x \in fv(t')}\\
@@ -99,6 +103,173 @@ Nous considérons les termes suivant comme des valeurs~:
 Un terme est dit propre si et seulement si $cl(t)=true$.
 \end{definition}
 
+\subsection{Preuves de propreté du calcul}
+\begin{lemma}[Préservation des substitutions]
+  Soient $\mathcal{C}$ un contexte de substitution, $x$ et $y$ des variables et t un terme.
+  \[
+    y \neq x~\wedge~y\in fv(\mathcal{C}[x]) \Rightarrow y \in fv(\mathcal{C}[t])
+  \]
+\end{lemma}
+\begin{proof}
+Par induction sur la forme de $\mathcal{C}$
+ \begin{itemize}
+    \item \underbar{Cas $\mathcal{C} = \square$~:} Prémisse fausse.
+    \item \underbar{Cas $\mathcal{C} = \mathcal{C}_1[z/v]$~:}\\
+      Comme $y\in fv(\mathcal{C}[x])$, nous avons deux cas.
+      \begin{itemize}
+        \item \underbar{Cas $y \in fv(v)$~:}\\ 
+          En particulier, $y \in fv(\mathcal{C}_1[t][z/v]) \Leftrightarrow y \in fv(\mathcal{C}[t])$
+        \item \underbar{Cas $y\in fv(\mathcal{C}_1[x]) \wedge y \neq z$~:}\\
+          Par hypothèse d'induction, $y\in fv(\mathcal{C}_1[t])$.\\
+          Comme $y \neq z$, $y\in fv(\mathcal{C}_1[t][z/v]) \Leftrightarrow y \in fv(\mathcal{C}[t]$ 
+      \end{itemize}
+    \item \underbar{Cas $\mathcal{C} = \mathcal{C}_1~u$~:}\\
+      De nouveau, nous avons deux cas.
+      \begin{itemize}
+        \item \underbar{Cas $y \in fv(u)$~:}\\
+          $ y \in fv(\mathcal{C}[t]~u) \Leftrightarrow y \in fv(\mathcal{C}[t])$
+        \item \underbar{Cas $y \in fv(\mathcal{C}_1[x])$~:}
+          Par hypothèse d'induction, $y \in fv(\mathcal{C}_1[t])$\\ 
+          Donc, $y \in fv(\mathcal{C}_1[t]~u) \Leftrightarrow y \in fv(\mathcal{C}[t])$
+      \end{itemize}
+    \item \underbar{Cas $\mathcal{C} = v~\mathcal{C}_1$~:} Analogue au cas précédent.
+  \end{itemize} 
+\end{proof}
+
+\begin{lemma}[Propreté des substitutions]
+  \label{prls}
+ Soient $\mathcal{C}$ un contexte de substitution, $t$ un terme et $x$ une variable.
+\[\mathcal{C}\llbracket x \rrbracket~\text{propre}~\wedge~t~\text{propre}~\Rightarrow \mathcal{C}[t]~\text{propre}\]
+\end{lemma}
+\begin{proof}
+  Par induction sur la forme de $\mathcal{C}$.
+  \begin{itemize}
+    \item \underbar{Cas $\mathcal{C} = \square$~:} trivial.
+    \item \underbar{Cas $\mathcal{C} = \mathcal{C}_1[y/v]$~:}\\
+      Comme $\mathcal{C}\llbracket x\rrbracket$ est propre, $\mathcal{C}_1\llbracket x \rrbracket$ et $v$ sont propres et $y\in fv(\mathcal{C}_1\llbracket x\rrbracket)$.
+      En particulier, $x \neq y$, car $x$ est supposé libre dans $\mathcal{C}\llbracket x \rrbracket$.
+      Par conséquence du lemme de préservation des substitutions, $y \in fv(\mathcal{C}_1[t])$.\\
+      Par hypothèse d'induction, nous avons $\mathcal{C}_1[t]$ propre.\\
+      Donc $\mathcal{C}[t]$ est propre.
+    \item \underbar{Cas $\mathcal{C} = \mathcal{C}_1~u$~:}
+      Par la propreté de $\mathcal{C}\llbracket x \rrbracket$, nous déduisons que $u$ et $\mathcal{C}_1\llbracket x \rrbracket$ sont propres.
+      Notre hypothèse d'induction nous donne $\mathcal{C}_1[t]$ propre. 
+      Nous déduisons que $\mathcal{C}[t] = \mathcal{C}_1[t]~u$ est propre.
+    \item \underbar{Cas $\mathcal{C} = v~\mathcal{C}_1$~:} Analogue au cas précédent.
+  \end{itemize}
+\end{proof}
+
+\begin{lemma}
+  \label{lemma0}
+  Soient $\mathcal{L}$ un contexte d'application, $t$ un terme et $x$ une variable.
+  \[ 
+    x \in fv(\mathcal{L}[\lambda y.t]) \Rightarrow x \in fv(\mathcal{L}[t])
+  \]
+\end{lemma}
+\begin{proof}
+  Par induction sur la forme de $\mathcal{L}$.
+  \begin{itemize}
+    \item \underbar{Cas $\mathcal{L} = \square$~:} Immédiat.
+    \item \underbar{Cas $\mathcal{L}=\mathcal{L}_1[z/v]$~:}\\
+      Comme $x\in fv(\mathcal{L}[\lambda y.t]) \Leftrightarrow x \in fv((\mathcal{L}_1[\lambda y.t])[z/v])$, nous avons deux cas.
+      \begin{itemize}
+        \item \underbar{Cas $x\in fv(v)$~:} Trivialement, $x \in fv((\mathcal{L}_1[t])[z/v]) \Leftrightarrow x\in fv(\mathcal{L}[t])$
+        \item \underbar{Cas $x\in fv(\mathcal{L}_1[\lambda y.t])\wedge x \neq z$~:}
+          Par hypothèse d'induction, $x\in fv(\mathcal{L}_1[t])$.
+          Nous déduisons $x \in fv((\mathcal{L}_1[t])[z/v]) \Leftrightarrow x\in fv(\mathcal{L}[t])$.
+      \end{itemize}
+  \end{itemize}
+\end{proof}
+
+\begin{lemma}[Propreté des applications nettoyante]
+  \label{prdbgc}
+  Soient $\mathcal{L}$ un contexte d'application et $t$ un terme.
+ \[
+   \mathcal{L}[\lambda x.t]~\text{propre}~\Rightarrow~\mathcal{L}[t]~\text{propre}
+ \]
+\end{lemma}
+\begin{proof}
+  Par induction sur la forme de $\mathcal{L}$.
+  \begin{itemize}
+    \item \underbar{Cas $\mathcal{L} = \square$~:} Par définition de la propreté.
+    \item \underbar{Cas $\mathcal{L}=\mathcal{L}_1[y/v]$~:}\\
+      Comme $\mathcal{L}[\lambda x.t]~\text{propre}~\Leftrightarrow (\mathcal{L}_1[\lambda x.t])[y/v]~\text{propre}$, nous pouvons en déduire trois choses.
+      \begin{enumerate}
+        \item $\mathcal{L}_1[\lambda x.t]~\text{propre}~\Rightarrow~ \mathcal{L}_1[t]$~propre par hypothèse d'induction.
+        \item $y\in fv(\mathcal{L}_1[\lambda x.t]) \Rightarrow y \in fv(\mathcal{L}_1[t])$~par le lemme \ref{lemma0}.
+        \item $v$ propre.
+      \end{enumerate}
+      Donc $(\mathcal{L}_1[t])[y/v] = \mathcal{L}[t]$~est propre.
+  \end{itemize}
+\end{proof}
+
+\begin{lemma}
+  \label{lemma1}
+  Soient $\mathcal{L}$ un contexte d'application, $t$ et $u$ des termes et $x$ une variable.
+  \[ 
+    x \in fv(\mathcal{L}[\lambda y.t]) \Rightarrow x \in fv(\mathcal{L}[t[y/u]])
+  \]
+\end{lemma}
+\begin{proof}
+  Par induction sur la forme de $\mathcal{L}$.
+  \begin{itemize}
+    \item \underbar{Cas $\mathcal{L} = \square$~:} Obligatoirement, $x\in fv(t)$ et $x\neq y$.
+      Par conséquent, $x\in fv(\mathcal{L}[t[y/u]])$.
+    \item \underbar{Cas $\mathcal{L}=\mathcal{L}_1[z/v]$~:}\\
+      Comme $x\in fv(\mathcal{L}[\lambda y.t]) \Leftrightarrow x \in fv((\mathcal{L}_1[\lambda y.t])[z/v])$, nous avons deux cas.
+      \begin{itemize}
+        \item \underbar{Cas $x\in fv(v)$~:} Trivialement, $x \in fv((\mathcal{L}_1[t[y/u]])[z/v]) \Leftrightarrow x\in fv(\mathcal{L}[t[y/u]])$
+        \item \underbar{Cas $x\in fv(\mathcal{L}_1[\lambda y.t])\wedge x \neq z$~:}
+          Par hypothèse d'induction, $x\in fv(\mathcal{L}_1[t[y/u]])$.
+          Nous déduisons $x \in fv((\mathcal{L}_1[t[y/u]])[z/v]) \Leftrightarrow x\in fv(\mathcal{L}[t[y/u]])$.
+      \end{itemize}
+  \end{itemize}
+\end{proof}
+
+\begin{lemma}[Propreté des applications]
+  \label{prdb}
+  Soient $\mathcal{L}$ un contexte d'application et $t$ un terme.
+ \[
+   x\in fv(t)~\wedge~\mathcal{L}[\lambda x.t]~v~\text{propre}~\Rightarrow~\mathcal{L}[t[x/v]]~\text{propre}
+ \]
+\end{lemma}
+\begin{proof}
+  Par induction sur la forme de $\mathcal{L}$.
+  \begin{itemize}
+    \item \underbar{Cas $\mathcal{L} = \square$~:} Par définition de la propreté, on a $t$ et $v$ propres.\\
+      Nous déduisons que $t[x/v] = \mathcal{L}[t[x/v]]$~est propre.
+    \item \underbar{Cas $\mathcal{L}=\mathcal{L}_1[y/u]$~:}\\
+      Comme $\mathcal{L}[\lambda x.t]~\text{propre}~\Leftrightarrow (\mathcal{L}_1[\lambda x.t])[y/u]~\text{propre}$, nous pouvons en déduire trois choses.
+      \begin{enumerate}
+        \item $\mathcal{L}_1[\lambda x.t]~\text{propre}~\Rightarrow~ \mathcal{L}_1[t[x/v]]$~propre par hypothèse d'induction.
+        \item $y\in fv(\mathcal{L}_1[\lambda x.t]) \Rightarrow y \in fv(\mathcal{L}_1[t[x/v]])$~par le lemme \ref{lemma1}.
+        \item $u$ propre.
+      \end{enumerate}
+      Donc $(\mathcal{L}_1[t[x/v]])[y/u] = \mathcal{L}[t[x/v]]$~est propre.
+  \end{itemize}
+\end{proof}
+
+\begin{lemma}[Préservation de la propreté]
+  Soient $t_0$ et $t_1$ des termes. 
+  \[
+    t_0~\text{propre}~\wedge~t_0\rightarrow~t_1~\Rightarrow~t_1~\text{propre}
+  \]
+\end{lemma}
+\begin{proof}
+  Par induction sur la dérivation de $t_0 \rightarrow t_1$.
+  \begin{itemize}
+    \item \underbar{Cas DB~:} Lemme \ref{prdb}. 
+    \item \underbar{Cas DBGC~:} Lemme \ref{prdbgc}. 
+    \item \underbar{Cas LS et LSGC~:} Lemme \ref{prls}.
+    \item \underbar{Cas GC~:} Supposons que $t[x/u]$ est propre. Donc, $t$ est propre. Or, $t \rightarrow t'$. Par hypothèse d'induction, $t'$ est propre.
+    \item \underbar{Cas US~:} Supposons que $t[x/u]$ est propre. Donc, $t$ et $u$ sont propres. Or, $t \rightarrow t'$. Par hypothèse d'induction, $t'$ est propre.
+      Comme dans les hypothèses d'US, $x \in fv(t')$, $t'[x/u]$ est propre.
+    \item \underbar{Cas LA~:} Supposons $t~u$ propre. Comme $t \rightarrow t'$, nous déduisons que $t'$ est propre et par conséquence, $t'~u$ est propre.
+    \item \underbar{Cas RA~:} Analogue au cas précédent.
+  \end{itemize}
+\end{proof}
+
+\subsection{Preuves sur FLAME}
 \begin{lemma}[Plongeon]
   Soient $\mathcal{C}$, $\mathcal{D}$ des contextes de substitution et $t$ un terme.
 \[\langle -,\mathcal{C}[t], \mathcal{D}\rangle_0 \rightsquigarrow^* \langle -,t,\mathcal{C} :: \mathcal{D}\rangle_0\]
@@ -165,81 +336,13 @@ Un terme est dit propre si et seulement si $cl(t)=true$.
     \item \underbar{Cas $\mathcal{C} = v~\mathcal{C}_1$~:} Analogue au cas précédent.
   \end{itemize}
 \end{proof}
-\begin{lemma}[Préservation des substitutions]
-  Soient $\mathcal{C}$ un contexte de substitution, $x$ et $y$ des variables et t un terme.
+
+\begin{lemma}[Simulation raisonnable]
+  Soient $t$ et $u$ des termes propres et $\mtd$ un contexte de substitution.
   \[
-    y \neq x~\wedge~y\in fv(\mathcal{C}[x]) \Rightarrow y \in fv(\mathcal{C}[t])
+    t \rightarrow u~\text{avec un espace}~S \Rightarrow \etat{-,t,\mtd}_0 \rightsquigarrow^* \etat{-,u,\mtd}_2~\text{avec un espace}~2\times S+|\mtd|
   \]
 \end{lemma}
-\begin{proof}
-Par induction sur la forme de $\mathcal{C}$
- \begin{itemize}
-    \item \underbar{Cas $\mathcal{C} = \square$~:} Prémisse fausse.
-    \item \underbar{Cas $\mathcal{C} = \mathcal{C}_1[z/v]$~:}\\
-      Comme $y\in fv(\mathcal{C}[x])$, nous avons deux cas.
-      \begin{itemize}
-        \item \underbar{Cas $y \in fv(v)$~:}\\ 
-          En particulier, $y \in fv(\mathcal{C}_1[t][z/v]) \Leftrightarrow y \in fv(\mathcal{C}[t])$
-        \item \underbar{Cas $y\in fv(\mathcal{C}_1[x]) \wedge y \neq z$~:}\\
-          Par hypothèse d'induction, $y\in fv(\mathcal{C}_1[t])$.\\
-          Comme $y \neq z$, $y\in fv(\mathcal{C}_1[t][z/v]) \Leftrightarrow y \in fv(\mathcal{C}[t]$ 
-      \end{itemize}
-    \item \underbar{Cas $\mathcal{C} = \mathcal{C}_1~u$~:}\\
-      De nouveau, nous avons deux cas.
-      \begin{itemize}
-        \item \underbar{Cas $y \in fv(u)$~:}\\
-          $ y \in fv(\mathcal{C}[t]~u) \Leftrightarrow y \in fv(\mathcal{C}[t])$
-        \item \underbar{Cas $y \in fv(\mathcal{C}_1[x])$~:}
-          Par hypothèse d'induction, $y \in fv(\mathcal{C}_1[t])$\\ 
-          Donc, $y \in fv(\mathcal{C}_1[t]~u) \Leftrightarrow y \in fv(\mathcal{C}[t])$
-      \end{itemize}
-    \item \underbar{Cas $\mathcal{C} = v~\mathcal{C}_1$~:} Analogue au cas précédent.
-  \end{itemize} 
-\end{proof}
-
-\begin{lemma}[Propreté des substitutions]
- Soient $\mathcal{C}$ un contexte de substitution, $t$ un terme et $x$ une variable.
-\[\mathcal{C}\llbracket x \rrbracket~\text{propre}~\wedge~t~\text{propre}~\Rightarrow \mathcal{C}[t]~\text{propre}\]
-\end{lemma}
-\begin{proof}
-  Par induction sur la forme de $\mathcal{C}$.
-  \begin{itemize}
-    \item \underbar{Cas $\mathcal{C} = \square$~:} trivial.
-    \item \underbar{Cas $\mathcal{C} = \mathcal{C}_1[y/v]$~:}\\
-      Comme $\mathcal{C}\llbracket x\rrbracket$ est propre, $\mathcal{C}_1\llbracket x \rrbracket$ et $v$ sont propres et $y\in fv(\mathcal{C}_1\llbracket x\rrbracket)$.
-      En particulier, $x \neq y$, car $x$ est supposé libre dans $\mathcal{C}\llbracket x \rrbracket$.
-      Par conséquence du lemme de préservation des substitutions, $y \in fv(\mathcal{C}_1[t])$.\\
-      Par hypothèse d'induction, nous avons $\mathcal{C}_1[t]$ propre.\\
-      Donc $\mathcal{C}[t]$ est propre.
-    \item \underbar{Cas $\mathcal{C} = \mathcal{C}_1~u$~:}
-      Par la propreté de $\mathcal{C}\llbracket x \rrbracket$, nous déduisons que $u$ et $\mathcal{C}_1\llbracket x \rrbracket$ sont propres.
-      Notre hypothèse d'induction nous donne $\mathcal{C}_1[t]$ propre. 
-      Nous déduisons que $\mathcal{C}[t] = \mathcal{C}_1[t]~u$ est propre.
-    \item \underbar{Cas $\mathcal{C} = v~\mathcal{C}_1$~:} Analogue au cas précédent.
-  \end{itemize}
-\end{proof}
-
-\begin{lemma}
-  \label{lemma0}
-  Soient $\mathcal{L}$ un contexte d'application, $t$ un term et $x$ une variable.
-  \[ 
-    x \in fv(\mathcal{L}[\lambda y.t]) \Rightarrow x \in fv(\mathcal{L}[t])
-  \]
-\end{lemma}
-\begin{proof}
-  Par induction sur la forme de $\mathcal{L}$.
-  \begin{itemize}
-    \item \underbar{Cas $\mathcal{L} = \square$~:} Immédiat.
-    \item \underbar{Cas $\mathcal{L}=\mathcal{L}_1[z/v]$~:}\\
-      Comme $x\in fv(\mathcal{L}[\lambda y.t]) \Leftrightarrow x \in fv((\mathcal{L}_1[\lambda y.t])[z/v])$, nous avons deux cas.
-      \begin{itemize}
-        \item \underbar{Cas $x\in fv(v)$~:} Trivialement, $x \in fv((\mathcal{L}_1[t])[z/v]) \Leftrightarrow x\in fv(\mathcal{L}[t])$
-        \item \underbar{Cas $x\in fv(\mathcal{L}_1[\lambda y.t])\wedge x \neq z$~:}
-          Par hypothèse d'induction, $x\in fv(\mathcal{L}_1[t])$.
-          Nous déduisons $x \in fv((\mathcal{L}_1[t])[z/v]) \Leftrightarrow x\in fv(\mathcal{L}[t])$.
-      \end{itemize}
-  \end{itemize}
-\end{proof}
 
 \section{Le Space Calculus}
 
