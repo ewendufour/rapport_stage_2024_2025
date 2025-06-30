@@ -17,10 +17,16 @@
 \newtheorem{definition}{Définition}[section]
 \newtheorem{theorem}{Théorème}[section]
 \newtheorem{lemma}[theorem]{Lemme}
+\newtheorem*{remark}{Remarque}
 
 \newcommand{\etat}[1]{\langle #1 \rangle}
+\newcommand{\etatz}[1]{\langle #1 \rangle_0}
+\newcommand{\etatu}[1]{\langle #1 \rangle_1}
+\newcommand{\etatd}[1]{\langle #1 \rangle_2}
 \newcommand{\mtd}{\mathcal{D}}
-\newcommand{\mt}{\mathcal{C}}
+\newcommand{\mtc}{\mathcal{C}}
+\newcommand{\mtl}{\mathcal{L}}
+
 
 
 \title{Étude d'une mesure d'espace pour le lambda calcul}
@@ -68,12 +74,12 @@ Nous considérons les termes suivant comme des valeurs~:
 \begin{align*}
     v ::= (\lambda x.t)~|~v[x/t]
 \end{align*}
-\begin{definition}[Contextes de substitution]
+\begin{definition}[Contextes d'évaluation]
 \begin{align*}
     \mathcal{C} ::= \square~|~\mathcal{C}~t~|~v~\mathcal{C}~|~\mathcal{C}[x/t]
 \end{align*}
 \end{definition}
-\begin{definition}[Contextes d'application]
+\begin{definition}[Contextes de substitution]
 \begin{align*}
   \mathcal{L} ::= \square~|~\mathcal{L}[x/v]
 \end{align*}
@@ -95,19 +101,43 @@ Nous considérons les termes suivant comme des valeurs~:
 
 \begin{definition}[Propreté]
 \begin{align*}
-    cl(x) &= true\\
-    cl(\lambda x.t) &= cl(t)\\
-    cl(t~u) &= cl(t) \wedge cl(u)\\
-    cl(t[x/u]) &= cl(t) \wedge x\in fv(t) \wedge cl(u)
-\end{align*}
-Un terme est dit propre si et seulement si $cl(t)=true$.
+    &\infer{cl(x)}{}
+ &\infer{cl(\lambda x.t)}{cl(t)}\\
+ &\infer{cl(t~u)}{cl(t) & cl(u) }
+&\infer{cl(t[x/u])}{cl(t)&cl(u)&x\in fv(t)}
+  \end{align*}
+Un terme $t$ est dit propre si et seulement si $cl(t)$ possède une dérivation.
 \end{definition}
 
+\begin{definition}[Taille d'un terme]
+  \begin{align*}
+    |x| &= |dB(x)|\\
+    |\lambda x.t| &= |t| + 1\\
+    |t~u| = |t[x/u]| &= |t| + |u|
+  \end{align*}
+  Nous considérons ici que les variables d'un même terme on toutes la même taille, celle de l'indice de de Bruijn le plus grand.
+\end{definition}
+
+\begin{definition}[Taille d'un Contexte]
+  \begin{align*}
+    |\square| &= 0\\
+    |\mtc~t| &= |\mtc|+|t|\\
+    |t~\mtc| &= |\mtc|+|t|\\
+    |\mtc[x/t]| &= |\mtc| +|t|
+  \end{align*}
+  Nous étendons cette propriété au contextes d'application.
+\end{definition}
+
+\begin{remark}
+  Nous pouvons constater que $|\mtc[t]| = |\mtc|+|t|$.
+\end{remark}
+
 \subsection{Preuves de propreté du calcul}
-\begin{lemma}[Préservation des substitutions]
-  Soient $\mathcal{C}$ un contexte de substitution, $x$ et $y$ des variables et t un terme.
+\begin{lemma}[Préservation des variables libres]
+  \label{lemmapresfv}
+  Soient $\mathcal{C}$ un contexte de d'évaluation, $x$ et $y$ des variables et t un terme.
   \[
-    y \neq x~\wedge~y\in fv(\mathcal{C}[x]) \Rightarrow y \in fv(\mathcal{C}[t])
+    \text{Si}~y \neq x~\wedge~y\in fv(\mathcal{C}[x])~\text{alors}~y \in fv(\mathcal{C}[t])
   \]
 \end{lemma}
 \begin{proof}
@@ -118,10 +148,10 @@ Par induction sur la forme de $\mathcal{C}$
       Comme $y\in fv(\mathcal{C}[x])$, nous avons deux cas.
       \begin{itemize}
         \item \underbar{Cas $y \in fv(v)$~:}\\ 
-          En particulier, $y \in fv(\mathcal{C}_1[t][z/v]) \Leftrightarrow y \in fv(\mathcal{C}[t])$
+          En particulier, $y \in fv(\mathcal{C}_1[t][z/v])~\text{c'est à dire}~y \in fv(\mathcal{C}[t])$
         \item \underbar{Cas $y\in fv(\mathcal{C}_1[x]) \wedge y \neq z$~:}\\
           Par hypothèse d'induction, $y\in fv(\mathcal{C}_1[t])$.\\
-          Comme $y \neq z$, $y\in fv(\mathcal{C}_1[t][z/v]) \Leftrightarrow y \in fv(\mathcal{C}[t]$ 
+          Comme $y \neq z$, $y\in fv(\mathcal{C}_1[t][z/v])~\text{i.e}~y \in fv(\mathcal{C}[t]$ 
       \end{itemize}
     \item \underbar{Cas $\mathcal{C} = \mathcal{C}_1~u$~:}\\
       De nouveau, nous avons deux cas.
@@ -130,7 +160,7 @@ Par induction sur la forme de $\mathcal{C}$
           $ y \in fv(\mathcal{C}[t]~u) \Leftrightarrow y \in fv(\mathcal{C}[t])$
         \item \underbar{Cas $y \in fv(\mathcal{C}_1[x])$~:}
           Par hypothèse d'induction, $y \in fv(\mathcal{C}_1[t])$\\ 
-          Donc, $y \in fv(\mathcal{C}_1[t]~u) \Leftrightarrow y \in fv(\mathcal{C}[t])$
+          Donc, $y \in fv(\mathcal{C}_1[t]~u)~\text{c.à.d}~y \in fv(\mathcal{C}[t])$
       \end{itemize}
     \item \underbar{Cas $\mathcal{C} = v~\mathcal{C}_1$~:} Analogue au cas précédent.
   \end{itemize} 
@@ -138,8 +168,8 @@ Par induction sur la forme de $\mathcal{C}$
 
 \begin{lemma}[Propreté des substitutions]
   \label{prls}
- Soient $\mathcal{C}$ un contexte de substitution, $t$ un terme et $x$ une variable.
-\[\mathcal{C}\llbracket x \rrbracket~\text{propre}~\wedge~t~\text{propre}~\Rightarrow \mathcal{C}[t]~\text{propre}\]
+ Soient $\mathcal{C}$ un contexte d'évaluation, $t$ un terme et $x$ une variable.
+ \[ \text{Si}~\mathcal{C}\llbracket x \rrbracket~\text{est propre et}~t~\text{est propre, alors}~ \mathcal{C}[t]~\text{est propre}\]
 \end{lemma}
 \begin{proof}
   Par induction sur la forme de $\mathcal{C}$.
@@ -148,7 +178,7 @@ Par induction sur la forme de $\mathcal{C}$
     \item \underbar{Cas $\mathcal{C} = \mathcal{C}_1[y/v]$~:}\\
       Comme $\mathcal{C}\llbracket x\rrbracket$ est propre, $\mathcal{C}_1\llbracket x \rrbracket$ et $v$ sont propres et $y\in fv(\mathcal{C}_1\llbracket x\rrbracket)$.
       En particulier, $x \neq y$, car $x$ est supposé libre dans $\mathcal{C}\llbracket x \rrbracket$.
-      Par conséquence du lemme de préservation des substitutions, $y \in fv(\mathcal{C}_1[t])$.\\
+      Par conséquence du lemme de préservation des variables libres \ref{lemmapresfv}, $y \in fv(\mathcal{C}_1[t])$.\\
       Par hypothèse d'induction, nous avons $\mathcal{C}_1[t]$ propre.\\
       Donc $\mathcal{C}[t]$ est propre.
     \item \underbar{Cas $\mathcal{C} = \mathcal{C}_1~u$~:}
@@ -161,9 +191,9 @@ Par induction sur la forme de $\mathcal{C}$
 
 \begin{lemma}
   \label{lemma0}
-  Soient $\mathcal{L}$ un contexte d'application, $t$ un terme et $x$ une variable.
+  Soient $\mathcal{L}$ un contexte de substitution, $t$ un terme et $x$ une variable.
   \[ 
-    x \in fv(\mathcal{L}[\lambda y.t]) \Rightarrow x \in fv(\mathcal{L}[t])
+    \text{Si}~x \in fv(\mathcal{L}[\lambda y.t])~\text{, alors}~x \in fv(\mathcal{L}[t])
   \]
 \end{lemma}
 \begin{proof}
@@ -183,9 +213,9 @@ Par induction sur la forme de $\mathcal{C}$
 
 \begin{lemma}[Propreté des applications nettoyante]
   \label{prdbgc}
-  Soient $\mathcal{L}$ un contexte d'application et $t$ un terme.
+  Soient $\mathcal{L}$ un contexte de substitution et $t$ un terme.
  \[
-   \mathcal{L}[\lambda x.t]~\text{propre}~\Rightarrow~\mathcal{L}[t]~\text{propre}
+   \text{Si}~\mathcal{L}[\lambda x.t]~\text{est propre, alors}~\mathcal{L}[t]~\text{est propre}
  \]
 \end{lemma}
 \begin{proof}
@@ -195,19 +225,22 @@ Par induction sur la forme de $\mathcal{C}$
     \item \underbar{Cas $\mathcal{L}=\mathcal{L}_1[y/v]$~:}\\
       Comme $\mathcal{L}[\lambda x.t]~\text{propre}~\Leftrightarrow (\mathcal{L}_1[\lambda x.t])[y/v]~\text{propre}$, nous pouvons en déduire trois choses.
       \begin{enumerate}
-        \item $\mathcal{L}_1[\lambda x.t]~\text{propre}~\Rightarrow~ \mathcal{L}_1[t]$~propre par hypothèse d'induction.
-        \item $y\in fv(\mathcal{L}_1[\lambda x.t]) \Rightarrow y \in fv(\mathcal{L}_1[t])$~par le lemme \ref{lemma0}.
+        \item $\mathcal{L}_1[\lambda x.t]~\text{propre. Nous en déduisons donc que}~\mathcal{L}_1[t]$~est propre par hypothèse d'induction.
+        \item $y\in fv(\mathcal{L}_1[\lambda x.t])$ et par conséquence du lemme \ref{lemma0}, $y \in fv(\mathcal{L}_1[t])$
         \item $v$ propre.
       \end{enumerate}
       Donc $(\mathcal{L}_1[t])[y/v] = \mathcal{L}[t]$~est propre.
   \end{itemize}
 \end{proof}
+\begin{remark}
+  Bien que ce lemme fonctionne lorsque $x \in fv(t)$, il n'a vraiment d'utilité que dans le cas où $x \notin fv(t)$.
+\end{remark}
 
 \begin{lemma}
   \label{lemma1}
-  Soient $\mathcal{L}$ un contexte d'application, $t$ et $u$ des termes et $x$ une variable.
+  Soient $\mathcal{L}$ un contexte de substitution, $t$ et $u$ des termes et $x$ une variable.
   \[ 
-    x \in fv(\mathcal{L}[\lambda y.t]) \Rightarrow x \in fv(\mathcal{L}[t[y/u]])
+    \text{Si}~x \in fv(\mathcal{L}[\lambda y.t])~\text{, alors}~x \in fv(\mathcal{L}[t[y/u]])
   \]
 \end{lemma}
 \begin{proof}
@@ -216,9 +249,9 @@ Par induction sur la forme de $\mathcal{C}$
     \item \underbar{Cas $\mathcal{L} = \square$~:} Obligatoirement, $x\in fv(t)$ et $x\neq y$.
       Par conséquent, $x\in fv(\mathcal{L}[t[y/u]])$.
     \item \underbar{Cas $\mathcal{L}=\mathcal{L}_1[z/v]$~:}\\
-      Comme $x\in fv(\mathcal{L}[\lambda y.t]) \Leftrightarrow x \in fv((\mathcal{L}_1[\lambda y.t])[z/v])$, nous avons deux cas.
+      Comme $x\in fv(\mathcal{L}[\lambda y.t])$, nécessairement, $x \in fv((\mathcal{L}_1[\lambda y.t])[z/v])$. Nous avons donc deux cas.
       \begin{itemize}
-        \item \underbar{Cas $x\in fv(v)$~:} Trivialement, $x \in fv((\mathcal{L}_1[t[y/u]])[z/v]) \Leftrightarrow x\in fv(\mathcal{L}[t[y/u]])$
+        \item \underbar{Cas $x\in fv(v)$~:} Trivialement, $x \in fv((\mathcal{L}_1[t[y/u]])[z/v])$. Autrement dit, $x\in fv(\mathcal{L}[t[y/u]])$
         \item \underbar{Cas $x\in fv(\mathcal{L}_1[\lambda y.t])\wedge x \neq z$~:}
           Par hypothèse d'induction, $x\in fv(\mathcal{L}_1[t[y/u]])$.
           Nous déduisons $x \in fv((\mathcal{L}_1[t[y/u]])[z/v]) \Leftrightarrow x\in fv(\mathcal{L}[t[y/u]])$.
@@ -228,9 +261,9 @@ Par induction sur la forme de $\mathcal{C}$
 
 \begin{lemma}[Propreté des applications]
   \label{prdb}
-  Soient $\mathcal{L}$ un contexte d'application et $t$ un terme.
+  Soient $\mathcal{L}$ un contexte de substitution et $t$ un terme.
  \[
-   x\in fv(t)~\wedge~\mathcal{L}[\lambda x.t]~v~\text{propre}~\Rightarrow~\mathcal{L}[t[x/v]]~\text{propre}
+  \text{Si }x\in fv(t)~\wedge~\mathcal{L}[\lambda x.t]~v~\text{est propre, alors}~\mathcal{L}[t[x/v]]~\text{est propre}
  \]
 \end{lemma}
 \begin{proof}
@@ -239,10 +272,10 @@ Par induction sur la forme de $\mathcal{C}$
     \item \underbar{Cas $\mathcal{L} = \square$~:} Par définition de la propreté, on a $t$ et $v$ propres.\\
       Nous déduisons que $t[x/v] = \mathcal{L}[t[x/v]]$~est propre.
     \item \underbar{Cas $\mathcal{L}=\mathcal{L}_1[y/u]$~:}\\
-      Comme $\mathcal{L}[\lambda x.t]~\text{propre}~\Leftrightarrow (\mathcal{L}_1[\lambda x.t])[y/u]~\text{propre}$, nous pouvons en déduire trois choses.
+      Comme $\mathcal{L}[\lambda x.t]~\text{est propre, nécessairement,}~(\mathcal{L}_1[\lambda x.t])[y/u]~$est propre. Nous pouvons en déduire trois choses.
       \begin{enumerate}
-        \item $\mathcal{L}_1[\lambda x.t]~\text{propre}~\Rightarrow~ \mathcal{L}_1[t[x/v]]$~propre par hypothèse d'induction.
-        \item $y\in fv(\mathcal{L}_1[\lambda x.t]) \Rightarrow y \in fv(\mathcal{L}_1[t[x/v]])$~par le lemme \ref{lemma1}.
+        \item $\mathcal{L}_1[\lambda x.t]~\text{est propre, et par hypothèse d'induction,}~\mathcal{L}_1[t[x/v]]$~est propre également.
+        \item $y\in fv(\mathcal{L}_1[\lambda x.t])~\text{ce qui nous donne}~y \in fv(\mathcal{L}_1[t[x/v]])$~par le lemme \ref{lemma1}.
         \item $u$ propre.
       \end{enumerate}
       Donc $(\mathcal{L}_1[t[x/v]])[y/u] = \mathcal{L}[t[x/v]]$~est propre.
@@ -258,9 +291,9 @@ Par induction sur la forme de $\mathcal{C}$
 \begin{proof}
   Par induction sur la dérivation de $t_0 \rightarrow t_1$.
   \begin{itemize}
-    \item \underbar{Cas DB~:} Lemme \ref{prdb}. 
-    \item \underbar{Cas DBGC~:} Lemme \ref{prdbgc}. 
-    \item \underbar{Cas LS et LSGC~:} Lemme \ref{prls}.
+    \item \underbar{Cas DB~:} Conséquence directe du lemme \ref{prdb}. 
+    \item \underbar{Cas DBGC~:} Conséquence du lemme \ref{prdbgc}. 
+    \item \underbar{Cas LS et LSGC~:} Conséquences du lemme de preté des substitutions \ref{prls}.
     \item \underbar{Cas GC~:} Supposons que $t[x/u]$ est propre. Donc, $t$ est propre. Or, $t \rightarrow t'$. Par hypothèse d'induction, $t'$ est propre.
     \item \underbar{Cas US~:} Supposons que $t[x/u]$ est propre. Donc, $t$ et $u$ sont propres. Or, $t \rightarrow t'$. Par hypothèse d'induction, $t'$ est propre.
       Comme dans les hypothèses d'US, $x \in fv(t')$, $t'[x/u]$ est propre.
@@ -271,8 +304,10 @@ Par induction sur la forme de $\mathcal{C}$
 
 \subsection{Preuves sur FLAME}
 \begin{lemma}[Plongeon]
-  Soient $\mathcal{C}$, $\mathcal{D}$ des contextes de substitution et $t$ un terme.
+  \label{lemmaplouf}
+  Soient $\mathcal{C}$, $\mathcal{D}$ des contextes d'évaluation et $t$ un terme.
 \[\langle -,\mathcal{C}[t], \mathcal{D}\rangle_0 \rightsquigarrow^* \langle -,t,\mathcal{C} :: \mathcal{D}\rangle_0\]
+en utilisant un espace $|\mtc|+|t|+|\mtd|$
 \end{lemma}
 \begin{proof}
   Par induction sur la forme de $\mathcal{C}$.
@@ -297,22 +332,22 @@ Par induction sur la forme de $\mathcal{C}$
     \rightsquigarrow^* &\langle -, t, \mathcal{C}_1:: v~\square:: \mathcal{D}\rangle_0 \quad \text{Par hypothèse d'induction.}
   \end{align*}
   \end{itemize}
+  L'espace utilisé se voit sur les réductions.
 \end{proof}
 
 \begin{lemma}[Reconstruction]
-  Soient $\mathcal{C}$ et $\mathcal{D}$ des contextes de substitution et $t$ un terme.
+  \label{lemmaportugal}
+  Soient $\mathcal{C}$ et $\mathcal{D}$ des contextes d'évaluation et $t$ un terme.
   \[\mathcal{C}[t]~\text{propre}~\Rightarrow \langle-,t,\mathcal{C}::\mathcal{D}\rangle_2 \rightsquigarrow^* \langle-,\mathcal{C}[t],\mathcal{D}\rangle_2\]
+en utilisant un espace $|\mtc|+|t|+|\mtd|$
 \end{lemma}
 \begin{proof}
   Par induction sur la forme de $\mathcal{C}$.
   \begin{itemize}
     \item \underbar{Cas $\mathcal{C} = \square$~:} immédiat.
     \item \underbar{Cas $\mathcal{C} = \mathcal{C}_1[x/v]$~:}\\
-      Nous avons~:
-      \begin{align*}
-      \mathcal{C}[t]~\text{propre} &\Leftrightarrow \mathcal{C}_1[t][x/v]~\text{propre}\\
-      &\Leftrightarrow x\in fv(\mathcal{C}_1[t]) \wedge \mathcal{C}_1[t]~\text{propre}
-      \end{align*}
+      Nous avons
+       $ \mathcal{C}[t]~\text{propre,}~\text{c.à.d}~\mathcal{C}_1[t][x/v]~\text{propre, ce qui nous donne}~x\in fv(\mathcal{C}_1[t])~\wedge~\mathcal{C}_1[t]~$propre.
       Et par conséquent~:
       \begin{align*}
         \langle -, t, \mathcal{C} :: \mathcal{D}\rangle_2 = &\langle -, t, \mathcal{C}_1[x/v]:: \mathcal{D}\rangle_2 \\
@@ -321,11 +356,7 @@ Par induction sur la forme de $\mathcal{C}$
         \rightsquigarrow_{bsubst} &\langle -, \mathcal{C}_1[t][x/v], \mathcal{D}\rangle_2 \quad &\text{Car}~x\in fv(\mathcal{C}_1[t])
       \end{align*}
     \item \underbar{Cas $\mathcal{C} = \mathcal{C}_1~u$~:}\\
-      Nous avons~:
-      \begin{align*}
-        \mathcal{C}[t]~\text{propre} &\Leftrightarrow \mathcal{C}_1[t]~u~\text{propre}\\
-        &\Rightarrow \mathcal{C}_1[t]~\text{propre}
-      \end{align*}
+      Nous avons $\mathcal{C}[t]~\text{propre, c'est à dire}~\mathcal{C}_1[t]~u~\text{propre. Cela force}~\mathcal{C}_1[t]~$propre.
       Ce qui nous donne~:
       \begin{align*}
         \langle -, t, \mathcal{C} :: \mathcal{D}\rangle_2 = &\langle -, t, \mathcal{C}_1~u:: \mathcal{D}\rangle_2 \\
@@ -335,14 +366,76 @@ Par induction sur la forme de $\mathcal{C}$
       \end{align*}
     \item \underbar{Cas $\mathcal{C} = v~\mathcal{C}_1$~:} Analogue au cas précédent.
   \end{itemize}
+  L'espace utilisé se voit sur les réductions.
 \end{proof}
 
 \begin{lemma}[Simulation raisonnable]
-  Soient $t$ et $u$ des termes propres et $\mtd$ un contexte de substitution.
+  Soient $t$ et $u$ des termes propres et $\mtd$ un contexte d'évaluation.
   \[
-    t \rightarrow u~\text{avec un espace}~S \Rightarrow \etat{-,t,\mtd}_0 \rightsquigarrow^* \etat{-,u,\mtd}_2~\text{avec un espace}~2\times S+|\mtd|
+    \text{Si}~t \rightarrow u~\text{avec un espace}~S~\text{, alors}~\etat{-,t,\mtd}_0 \rightsquigarrow^* \etat{-,u,\mtd}_2~\text{avec un espace}~2\times S+|\mtd|
   \]
 \end{lemma}
+\begin{proof}
+  Par induction sur la dérivation de $t\rightarrow u$.
+  \begin{itemize}
+    \item \underbar{Cas LS~:} Nous avons $\mtc\llbracket x\rrbracket[x/v]\rightarrow \mtc[v][x/v]$ sous hypothèse que $x\in fv(\mtc[v])$. Donc $S = |\mtc|+2\times|v|$.\\
+      \begin{tabular}{@{}l c c c@{}}
+        \toprule
+        transition & état & taille & justification\\
+        \midrule
+                   & $\etatz{-,\mtc\llbracket x\rrbracket[x/v],\mtd}$ & $|\mtd|+|v|+|\mtc|+|x|$\\
+        $\rightarrow_{us}$ & $ \etatz{-, \mtc\llbracket x \rrbracket, \square[x/v]::\mtd}$ & $|\mtd| + |v| + |\mtc|+|x|$\\ 
+        $\rightarrow^*$ & $ \etatz{-, x ,\mtc:: \square[x/v]::\mtd}$ & $|\mtd| + |v| + |\mtc|+|x|$& Lemme \ref{lemmaplouf}\\
+        $\rightarrow_{ls}$ & $ \etatd{-, v ,\mtc:: \square[x/v]::\mtd}$ & $|\mtd| + |v| + |\mtc|+|v|$\\
+        $\rightarrow^*$ & $ \etatd{-, \mtc[v], \square[x/v]::\mtd}$ & $|\mtd| + |v| + |\mtc|+|v|$ &Lemme \ref{lemmaportugal}\\ 
+        $\rightarrow_{bsubst}$ & $ \etatd{-, \mtc[v][x/v], \mtd}$ & $|\mtd| + |v| + |\mtc|+|v|$&$x\in fv(\mtc[v])$\\ 
+        \bottomrule
+      \end{tabular}\\
+      La taille maximum utilisée est $S +|\mtd| \le 2\times S +|\mtd|$.
+    \item \underbar{Cas LSGC~:} Nous avons $\mtc\llbracket x\rrbracket[x/v]\rightarrow \mtc[v]$ avec comme hypothèse que $x\notin fv(\mtc[v])$. Donc $S = |\mtc|+|x|+|v|$.\\
+      \begin{tabular}{@{}l c c c@{}}
+        \toprule
+        transition & état & taille & justification\\
+        \midrule
+                   & $\etatz{-,\mtc\llbracket x\rrbracket[x/v],\mtd}$ & $|\mtd|+|v|+|\mtc|+|x|$\\
+        $\rightarrow_{us}$ & $ \etatz{-, \mtc\llbracket x \rrbracket, \square[x/v]::\mtd}$ & $|\mtd| + |v| + |\mtc|+|x|$\\ 
+        $\rightarrow^*$ & $ \etatz{-, x ,\mtc:: \square[x/v]::\mtd}$ & $|\mtd| + |v| + |\mtc|+|x|$& Lemme \ref{lemmaplouf}\\
+        $\rightarrow_{ls}$ & $ \etatd{-, v ,\mtc:: \square[x/v]::\mtd}$ & $|\mtd| + |v| + |\mtc|+|v|$\\
+        $\rightarrow^*$ & $ \etatd{-, \mtc[v], \square[x/v]::\mtd}$ & $|\mtd| + |v| + |\mtc| +|v|$ &Lemme \ref{lemmaportugal}\\ 
+        $\rightarrow_{gc}$ & $ \etatd{-, \mtc[v], \mtd}$ & $|\mtd| + |v| + |\mtc|$& $x\notin fv(\mtc[v])$\\ 
+        \bottomrule
+      \end{tabular}\\
+      La taille maximum utilisée est $2 \times |v| + |\mtc| +|\mtd| \le 2\times S +|\mtd|$.
+    \item \underbar{Cas DB~:} Nous avons $\mtl[\lambda x.t]~v \rightarrow \mtl[t[x/v]]$ sous hypothèse que $x\in fv(t)$. Donc $S = |\mtl|+|v|+|t|+1$.\\
+      \begin{tabular}{@{}l c c c@{}}
+        \toprule
+        transition & état & taille & justification\\
+        \midrule
+                   & $\etatz{-,\mtc\llbracket x\rrbracket[x/v],\mtd}$ & $|\mtd|+|v|+|\mtc|+|x|$\\
+        $\rightarrow_{us}$ & $ \etatz{-, \mtc\llbracket x \rrbracket, \square[x/v]::\mtd}$ & $|\mtd| + |v| + |\mtc|+|x|$\\ 
+        $\rightarrow^*$ & $ \etatz{-, x ,\mtc:: \square[x/v]::\mtd}$ & $|\mtd| + |v| + |\mtc|+|x|$& Lemme \ref{lemmaplouf}\\
+        $\rightarrow_{ls}$ & $ \etatd{-, v ,\mtc:: \square[x/v]::\mtd}$ & $|\mtd| + |v| + |\mtc|+|v|$\\
+        $\rightarrow^*$ & $ \etatd{-, \mtc[v], \square[x/v]::\mtd}$ & $|\mtd| + |v| + |\mtc|+|v|$ &Lemme \ref{lemmaportugal}\\ 
+        $\rightarrow_{bsubst}$ & $ \etatd{-, \mtc[v][x/v], \mtd}$ & $|\mtd| + |v| + |\mtc|+|v|$&$x\in fv(\mtc[v])$\\ 
+        \bottomrule
+      \end{tabular}\\
+      La taille maximum utilisée est $S +|\mtd| \le 2\times S +|\mtd|$.
+    \item \underbar{Cas LSGC~:} Nous avons $\mtc\llbracket x\rrbracket[x/v]\rightarrow \mtc[v]$ avec comme hypothèse que $x\notin fv(\mtc[v])$. Donc $S = |\mtl|+|t|+|v|$.\\
+      \begin{tabular}{@{}l c c c@{}}
+        \toprule
+        transition & état & taille & justification\\
+        \midrule
+                   & $\etatz{-,\mtc\llbracket x\rrbracket[x/v],\mtd}$ & $|\mtd|+|v|+|\mtc|+|x|$\\
+        $\rightarrow_{us}$ & $ \etatz{-, \mtc\llbracket x \rrbracket, \square[x/v]::\mtd}$ & $|\mtd| + |v| + |\mtc|+|x|$\\ 
+        $\rightarrow^*$ & $ \etatz{-, x ,\mtc:: \square[x/v]::\mtd}$ & $|\mtd| + |v| + |\mtc|+|x|$& Lemme \ref{lemmaplouf}\\
+        $\rightarrow_{ls}$ & $ \etatd{-, v ,\mtc:: \square[x/v]::\mtd}$ & $|\mtd| + |v| + |\mtc|+|v|$\\
+        $\rightarrow^*$ & $ \etatd{-, \mtc[v], \square[x/v]::\mtd}$ & $|\mtd| + |v| + |\mtc| +|v|$ &Lemme \ref{lemmaportugal}\\ 
+        $\rightarrow_{gc}$ & $ \etatd{-, \mtc[v], \mtd}$ & $|\mtd| + |v| + |\mtc|$& $x\notin fv(\mtc[v])$\\ 
+        \bottomrule
+      \end{tabular}\\
+      La taille maximum utilisée est $2 \times |v| + |\mtc| +|\mtd| \le 2\times S +|\mtd|$.
+  \end{itemize}
+\end{proof}
 
 \section{Le Space Calculus}
 
