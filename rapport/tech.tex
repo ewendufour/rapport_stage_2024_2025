@@ -69,7 +69,7 @@ $t[x / u]$ &$\mapsto_{gc}$ &$t$ & if $x\notin fv(t)$
 \end{align*}
 \end{definition}
 
-\section{Le Weak Call By Value LSC}
+\section{Le LSC en appel par valeur}
 Nous considérons les termes suivant comme des valeurs~:
 \begin{align*}
     v ::= (\lambda x.t)~|~v[x/t]
@@ -132,7 +132,7 @@ Un terme $t$ est dit propre si et seulement si $cl(t)$ possède une dérivation.
   Nous pouvons constater que $|\mtc[t]| = |\mtc|+|t|$.
 \end{remark}
 
-\subsection{Preuves de propreté du calcul}
+\subsection{Propreté du LSC en appel par valeur}
 \begin{lemma}[Préservation des variables libres]
   \label{lemmapresfv}
   Soient $\mathcal{C}$ un contexte de d'évaluation, $x$ et $y$ des variables et t un terme.
@@ -302,7 +302,7 @@ Par induction sur la forme de $\mathcal{C}$
   \end{itemize}
 \end{proof}
 
-\subsection{Preuves sur FLAME}
+\subsection{Simulation du LSC en appel par valeur par FLAME}
 \begin{lemma}[Plongeon évaluation]
   \label{lemmaplouf}
   Soient $\mathcal{C}$, $\mathcal{D}$ des contextes d'évaluation et $t$ un terme.
@@ -394,7 +394,7 @@ en utilisant un espace $|\mtd|+|t|+|\mtl|+|u|$
 \begin{lemma}[Simulation raisonnable]
   Soient $t$ et $u$ des termes propres et $\mtd$ un contexte d'évaluation.
   \[
-    \text{Si}~t \rightarrow u~\text{avec un espace}~S~\text{, alors}~\etat{-,t,\mtd}_0 \rightsquigarrow^* \etat{-,u,\mtd}_2~\text{avec un espace}~2\times S+|\mtd|
+    \text{Si}~t \rightarrow u~\text{avec un espace}~S~\text{, alors }~\exists k \ge 1, \etat{-,t,\mtd}_0 \rightsquigarrow^* \etat{-,u,\mtd}_2~\text{avec un espace}~k\times S+|\mtd|
   \]
 \end{lemma}
 \begin{proof}
@@ -413,7 +413,7 @@ en utilisant un espace $|\mtd|+|t|+|\mtl|+|u|$
         $\rightsquigarrow_{bsubst}$ & $ \etatd{-, \mtc[v][x/v], \mtd}$ & $|\mtd| + |v| + |\mtc|+|v|$&$x\in fv(\mtc[v])$\\ 
         \bottomrule
       \end{tabular}\\
-      La taille maximum utilisée est $S +|\mtd| \le 2\times S +|\mtd|$.
+      La taille maximum utilisée est $S +|\mtd|$.
     \item \underbar{Cas LSGC~:} Nous avons $\mtc\llbracket x\rrbracket[x/v]\rightarrow \mtc[v]$ avec comme hypothèse que $x\notin fv(\mtc[v])$. Donc $S = |\mtc|+|x|+|v|$.\\
       \begin{tabular}{@{}l c c c@{}}
         \toprule
@@ -441,7 +441,7 @@ en utilisant un espace $|\mtd|+|t|+|\mtl|+|u|$
         $\rightsquigarrow^*$ & $ \etatd{-, \mtl[t[x/v]],\mtd}$ & $|\mtd| + |v| + |\mtl|+|t|$ &Lemme \ref{lemmaportugal}\\ 
         \bottomrule
       \end{tabular}\\
-      La taille maximum utilisée est $S +|\mtd| \le 2\times S +|\mtd|$.
+      La taille maximum utilisée est $S +|\mtd|$.
     \item \underbar{Cas DBGC~:} Nous avons $\mtl[\lambda x.t]~v \rightarrow \mtl[t]$ sous hypothèse que $x\notin fv(t)$. Donc $S = |\mtl|+|v|+|t|+1$.\\
       \begin{tabular}{@{}l c c c@{}}
         \toprule
@@ -455,7 +455,7 @@ en utilisant un espace $|\mtd|+|t|+|\mtl|+|u|$
         $\rightsquigarrow^*$ & $ \etatd{-, \mtl[t],\mtd}$ & $|\mtd| + |\mtl|+|t|$ &Lemme \ref{lemmaportugal}\\ 
         \bottomrule
       \end{tabular}\\
-      La taille maximum utilisée est $S +|\mtd| \le 2\times S +|\mtd|$.
+      La taille maximum utilisée est $S +|\mtd|$.
     \item \underbar{Cas GC~:} Nous avons $t[x/v] \rightarrow t'$ sous hypothèse que $t \rightarrow t'$ et $x\notin fv(t')$. Donc $S = max(|t[x/v]|, |t'|)$. Nous notons $S' = |t \rightarrow t'| = max(|t|, |t'|)$.\\
       \begin{tabular}{@{}l c c c@{}}
         \toprule
@@ -467,10 +467,62 @@ en utilisant un espace $|\mtd|+|t|+|\mtl|+|u|$
       $\rightsquigarrow_{gc}$ & $ \etatd{-, t' ,\mtd}$ & $|\mtd| + |t'|$&$ x\notin fv(t') $\\
         \bottomrule
       \end{tabular}\\
-      Notre hypothèse d'induction indique également que la transition de la deuxième ligne vers la troisième ligne se fait avec un espace $2\times S' +|\mtd| + |v|$. 
-      La taille maximum utilisée est $2\times S' +|\mtd| \le 2\times S +|\mtd|$.
+      Notre hypothèse d'induction indique également que la transition de la deuxième ligne vers la troisième ligne se fait avec un espace $ k \times S' +|\mtd| + |v|$ pour une certaine constante $k\ge1$. 
+      Nous devons distinguer trois cas.
+      \begin{itemize}
+        \item \underbar{Cas $S = S' = |t'|$~:}
+          \begin{align*}
+            k \times S' + |\mtd| + |v|  &\le k \times S'+|\mtd|+|t'|  \quad \text{par définition de $S$}\\
+            &= (k+1) \times S' +|\mtd| \\ 
+            &= (k+1)\times S +|\mtd|
+          \end{align*}
+        \item \underbar{Cas $S' = |t|$ et $S = |t| + |v|$~:}
+          \begin{align*}
+            k \times S' + |v| + |\mtd| &\le k \times (S' + |v|) + |\mtd| \\
+                                       & = k \times S + |\mtd|
+          \end{align*}
+        \item \underbar{Cas $S' = |t'|$ et $S = |t| + |v|$~:}
+          \begin{align*}
+            k \times S' + |\mtd| + |v|  &=  k \times |t'|+|\mtd|+|v|\\
+                                        &= k \times S + |v| +|\mtd| \quad \text{Car $S \ge |t'|$ par définition.} \\ 
+            &= (k+1)\times S +|\mtd|
+          \end{align*}
+      \end{itemize}
+    \item \underbar{Cas US~:} Nous avons $t[x/v] \rightarrow t'[x/v]$ sous hypothèse que $x\in fv(t')$ et  $t\rightarrow t'$. Donc $S = S'+|v|$ avec $S' = max(|t|, |t'|) = | t \rightarrow t'|$.\\
+      \begin{tabular}{@{}l c c c@{}}
+        \toprule
+        transition & état & taille & justification\\
+        \midrule
+                   & $\etatz{-,t[x/v],\mtd}$ & $|\mtd|+|v|+|t|$\\
+        $\rightsquigarrow_{us}$ & $ \etatz{-, t, \square[x/v]:: \mtd}$ & $|\mtd| + |v| +|t|$\\ 
+        $\rightsquigarrow^*$ & $ \etatd{-, t' ,\square[x/v]::\mtd}$ & $|v| + |\mtd|+|t'|$& Par hypothèse d'induction\\
+        $\rightsquigarrow^*$ & $ \etatd{-, t'[x/v], \mtd}$ & $|v| + |\mtd|+|t'|$&$x \in fv(t')$\\
+        \bottomrule
+      \end{tabular}\\
+      Notre hypothèse nous assure que la transition de la deuxième ligne vers la troisième ligne se fait avec un espace $ k \times S' +|\mtd| + |v|$ avec $k\ge 1$. 
+      La taille maximum utilisée est $k \times S' +|\mtd|+|v| \le k \times (S'+|v|)+|\mtd| = k \times S + |\mtd|$.
+    \item \underbar{Cas LA~:} Nous avons $t~u \rightarrow t'~u$ sous hypothèse que $t\rightarrow t'$. Donc $S = S'+|u|$ avec $S' = max(|t|, |t'|) = | t \rightarrow t'|$.\\
+      \begin{tabular}{@{}l c c c@{}}
+        \toprule
+        transition & état & taille & justification\\
+        \midrule
+                   & $\etatz{-,t~u,\mtd}$ & $|\mtd|+|u|+|t|$\\
+        $\rightsquigarrow_{lapp}$ & $ \etatz{-, t, \square~u:: \mtd}$ & $|\mtd| + |u| +|t|$\\ 
+        $\rightsquigarrow^*$ & $ \etatz{-, t' ,\square~u::\mtd}$ & $|u| + |\mtd|+|t'|$& Par hypothèse d'induction\\
+        $\rightsquigarrow^*$ & $ \etatz{-, t'~u, \mtd}$ & $|u| + |\mtd|+|t'|$\\
+        \bottomrule
+      \end{tabular}\\
+      Notre hypothèse nous affirme que la transition de la deuxième ligne vers la troisième ligne se fait avec un espace $ k \times S' +|\mtd| + |u|$ avec $k\ge 1$. 
+      La taille maximum utilisée est $k \times S' +|\mtd|+|u| \le k \times (S'+|u|)+|\mtd| = k \times S + |\mtd|$.
+    \item \underbar{Cas RA~:} Analogue au cas précédent.
   \end{itemize}
 \end{proof}
+
+\begin{theorem}[FLAME simule le LSC en appel par valeur]
+  Ennoncé du gros théorème
+\end{theorem}
+
+\subsection{Simulation de FLAME par les machines de Turing}
 
 \section{Le Space Calculus}
 
