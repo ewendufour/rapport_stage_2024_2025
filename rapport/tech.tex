@@ -303,7 +303,7 @@ Par induction sur la forme de $\mathcal{C}$
 \end{proof}
 
 \subsection{Preuves sur FLAME}
-\begin{lemma}[Plongeon]
+\begin{lemma}[Plongeon évaluation]
   \label{lemmaplouf}
   Soient $\mathcal{C}$, $\mathcal{D}$ des contextes d'évaluation et $t$ un terme.
 \[\langle -,\mathcal{C}[t], \mathcal{D}\rangle_0 \rightsquigarrow^* \langle -,t,\mathcal{C} :: \mathcal{D}\rangle_0\]
@@ -369,6 +369,28 @@ en utilisant un espace $|\mtc|+|t|+|\mtd|$
   L'espace utilisé se voit sur les réductions.
 \end{proof}
 
+
+\begin{lemma}[Plongeon substitution]
+  \label{lemmaplouf2}
+  Soient $\mathcal{D}$ un contexte d'évaluation, $\mtl$ un contexte de substitution et $t$, $u$ des termes.
+  \[ \etatu{u, \mtl[t], \mtd} \rightsquigarrow_{rdb}^* \etatu{u, t, \mtl::\mtd} \]
+en utilisant un espace $|\mtd|+|t|+|\mtl|+|u|$
+\end{lemma}
+\begin{proof}
+  Par induction sur la forme de $\mathcal{L}$.
+  \begin{itemize}
+    \item \underbar{Cas $\mathcal{L} = \square$~:} immédiat.\\
+    \item \underbar{Cas $\mathcal{L} = \mathcal{L}_1[x/v]$~:}\\
+  \begin{align*}
+    \langle u, \mathcal{L}[t], \mathcal{D}\rangle_1 = &\langle u, \mathcal{L}_1[t][x/v], \mathcal{D}\rangle_1 \\
+    \rightsquigarrow_{rdb} &\langle u, \mathcal{L}_1[t], \square[x/v]:: \mathcal{D}\rangle_1 \\
+    \rightsquigarrow^*_{rdb} &\langle u, t, \mathcal{L}_1:: \square[x/v]:: \mathcal{D}\rangle_1 \quad \text{Par hypothèse d'induction.}\\
+ = &\etatu{u, t, \mtl_1[x/v]::\mtd} = \etatu{u, t, \mtl::\mtd}
+  \end{align*}
+  \end{itemize}
+  L'espace utilisé se voit sur les réductions.
+\end{proof}
+
 \begin{lemma}[Simulation raisonnable]
   Soient $t$ et $u$ des termes propres et $\mtd$ un contexte d'évaluation.
   \[
@@ -384,11 +406,11 @@ en utilisant un espace $|\mtc|+|t|+|\mtd|$
         transition & état & taille & justification\\
         \midrule
                    & $\etatz{-,\mtc\llbracket x\rrbracket[x/v],\mtd}$ & $|\mtd|+|v|+|\mtc|+|x|$\\
-        $\rightarrow_{us}$ & $ \etatz{-, \mtc\llbracket x \rrbracket, \square[x/v]::\mtd}$ & $|\mtd| + |v| + |\mtc|+|x|$\\ 
-        $\rightarrow^*$ & $ \etatz{-, x ,\mtc:: \square[x/v]::\mtd}$ & $|\mtd| + |v| + |\mtc|+|x|$& Lemme \ref{lemmaplouf}\\
-        $\rightarrow_{ls}$ & $ \etatd{-, v ,\mtc:: \square[x/v]::\mtd}$ & $|\mtd| + |v| + |\mtc|+|v|$\\
-        $\rightarrow^*$ & $ \etatd{-, \mtc[v], \square[x/v]::\mtd}$ & $|\mtd| + |v| + |\mtc|+|v|$ &Lemme \ref{lemmaportugal}\\ 
-        $\rightarrow_{bsubst}$ & $ \etatd{-, \mtc[v][x/v], \mtd}$ & $|\mtd| + |v| + |\mtc|+|v|$&$x\in fv(\mtc[v])$\\ 
+        $\rightsquigarrow_{us}$ & $ \etatz{-, \mtc\llbracket x \rrbracket, \square[x/v]::\mtd}$ & $|\mtd| + |v| + |\mtc|+|x|$\\ 
+        $\rightsquigarrow^*$ & $ \etatz{-, x ,\mtc:: \square[x/v]::\mtd}$ & $|\mtd| + |v| + |\mtc|+|x|$& Lemme \ref{lemmaplouf}\\
+        $\rightsquigarrow_{ls}$ & $ \etatd{-, v ,\mtc:: \square[x/v]::\mtd}$ & $|\mtd| + |v| + |\mtc|+|v|$\\
+        $\rightsquigarrow^*$ & $ \etatd{-, \mtc[v], \square[x/v]::\mtd}$ & $|\mtd| + |v| + |\mtc|+|v|$ &Lemme \ref{lemmaportugal}\\ 
+        $\rightsquigarrow_{bsubst}$ & $ \etatd{-, \mtc[v][x/v], \mtd}$ & $|\mtd| + |v| + |\mtc|+|v|$&$x\in fv(\mtc[v])$\\ 
         \bottomrule
       \end{tabular}\\
       La taille maximum utilisée est $S +|\mtd| \le 2\times S +|\mtd|$.
@@ -398,11 +420,11 @@ en utilisant un espace $|\mtc|+|t|+|\mtd|$
         transition & état & taille & justification\\
         \midrule
                    & $\etatz{-,\mtc\llbracket x\rrbracket[x/v],\mtd}$ & $|\mtd|+|v|+|\mtc|+|x|$\\
-        $\rightarrow_{us}$ & $ \etatz{-, \mtc\llbracket x \rrbracket, \square[x/v]::\mtd}$ & $|\mtd| + |v| + |\mtc|+|x|$\\ 
-        $\rightarrow^*$ & $ \etatz{-, x ,\mtc:: \square[x/v]::\mtd}$ & $|\mtd| + |v| + |\mtc|+|x|$& Lemme \ref{lemmaplouf}\\
-        $\rightarrow_{ls}$ & $ \etatd{-, v ,\mtc:: \square[x/v]::\mtd}$ & $|\mtd| + |v| + |\mtc|+|v|$\\
-        $\rightarrow^*$ & $ \etatd{-, \mtc[v], \square[x/v]::\mtd}$ & $|\mtd| + |v| + |\mtc| +|v|$ &Lemme \ref{lemmaportugal}\\ 
-        $\rightarrow_{gc}$ & $ \etatd{-, \mtc[v], \mtd}$ & $|\mtd| + |v| + |\mtc|$& $x\notin fv(\mtc[v])$\\ 
+        $\rightsquigarrow_{us}$ & $ \etatz{-, \mtc\llbracket x \rrbracket, \square[x/v]::\mtd}$ & $|\mtd| + |v| + |\mtc|+|x|$\\ 
+        $\rightsquigarrow^*$ & $ \etatz{-, x ,\mtc:: \square[x/v]::\mtd}$ & $|\mtd| + |v| + |\mtc|+|x|$& Lemme \ref{lemmaplouf}\\
+        $\rightsquigarrow_{ls}$ & $ \etatd{-, v ,\mtc:: \square[x/v]::\mtd}$ & $|\mtd| + |v| + |\mtc|+|v|$\\
+        $\rightsquigarrow^*$ & $ \etatd{-, \mtc[v], \square[x/v]::\mtd}$ & $|\mtd| + |v| + |\mtc| +|v|$ &Lemme \ref{lemmaportugal}\\ 
+        $\rightsquigarrow_{gc}$ & $ \etatd{-, \mtc[v], \mtd}$ & $|\mtd| + |v| + |\mtc|$& $x\notin fv(\mtc[v])$\\ 
         \bottomrule
       \end{tabular}\\
       La taille maximum utilisée est $2 \times |v| + |\mtc| +|\mtd| \le 2\times S +|\mtd|$.
@@ -411,29 +433,42 @@ en utilisant un espace $|\mtc|+|t|+|\mtd|$
         \toprule
         transition & état & taille & justification\\
         \midrule
-                   & $\etatz{-,\mtc\llbracket x\rrbracket[x/v],\mtd}$ & $|\mtd|+|v|+|\mtc|+|x|$\\
-        $\rightarrow_{us}$ & $ \etatz{-, \mtc\llbracket x \rrbracket, \square[x/v]::\mtd}$ & $|\mtd| + |v| + |\mtc|+|x|$\\ 
-        $\rightarrow^*$ & $ \etatz{-, x ,\mtc:: \square[x/v]::\mtd}$ & $|\mtd| + |v| + |\mtc|+|x|$& Lemme \ref{lemmaplouf}\\
-        $\rightarrow_{ls}$ & $ \etatd{-, v ,\mtc:: \square[x/v]::\mtd}$ & $|\mtd| + |v| + |\mtc|+|v|$\\
-        $\rightarrow^*$ & $ \etatd{-, \mtc[v], \square[x/v]::\mtd}$ & $|\mtd| + |v| + |\mtc|+|v|$ &Lemme \ref{lemmaportugal}\\ 
-        $\rightarrow_{bsubst}$ & $ \etatd{-, \mtc[v][x/v], \mtd}$ & $|\mtd| + |v| + |\mtc|+|v|$&$x\in fv(\mtc[v])$\\ 
+                   & $\etatz{-,\mtl[\lambda x.t]~v,\mtd}$ & $|\mtd|+|v|+|\mtl|+|t|+1$\\
+        $\rightsquigarrow_{db}$ & $ \etatu{v, \mtl[ \lambda x.t], \mtd}$ & $|\mtd| + |v| + |\mtl|+|t|+1$\\ 
+        $\rightsquigarrow^*_{rdb}$ & $ \etatu{v, \lambda x.t ,\mtl::\mtd}$ & $|\mtd| + |v| + |\mtl|+|t|+1$& Lemme \ref{lemmaplouf2}\\
+        $\rightsquigarrow_{fdb}$ & $ \etatd{-, t ,\square[x/v]::\mtl::\mtd}$ & $|\mtd| + |v| + |\mtl|+|t|$\\
+        $\rightsquigarrow_{rsubst}$ & $ \etatd{-, t[x/v] ,\mtl::\mtd}$ & $|\mtd| +|v|+ |\mtl|+|t|$& $x\in fv(t)$\\
+        $\rightsquigarrow^*$ & $ \etatd{-, \mtl[t[x/v]],\mtd}$ & $|\mtd| + |v| + |\mtl|+|t|$ &Lemme \ref{lemmaportugal}\\ 
         \bottomrule
       \end{tabular}\\
       La taille maximum utilisée est $S +|\mtd| \le 2\times S +|\mtd|$.
-    \item \underbar{Cas LSGC~:} Nous avons $\mtc\llbracket x\rrbracket[x/v]\rightarrow \mtc[v]$ avec comme hypothèse que $x\notin fv(\mtc[v])$. Donc $S = |\mtl|+|t|+|v|$.\\
+    \item \underbar{Cas DBGC~:} Nous avons $\mtl[\lambda x.t]~v \rightarrow \mtl[t]$ sous hypothèse que $x\notin fv(t)$. Donc $S = |\mtl|+|v|+|t|+1$.\\
       \begin{tabular}{@{}l c c c@{}}
         \toprule
         transition & état & taille & justification\\
         \midrule
-                   & $\etatz{-,\mtc\llbracket x\rrbracket[x/v],\mtd}$ & $|\mtd|+|v|+|\mtc|+|x|$\\
-        $\rightarrow_{us}$ & $ \etatz{-, \mtc\llbracket x \rrbracket, \square[x/v]::\mtd}$ & $|\mtd| + |v| + |\mtc|+|x|$\\ 
-        $\rightarrow^*$ & $ \etatz{-, x ,\mtc:: \square[x/v]::\mtd}$ & $|\mtd| + |v| + |\mtc|+|x|$& Lemme \ref{lemmaplouf}\\
-        $\rightarrow_{ls}$ & $ \etatd{-, v ,\mtc:: \square[x/v]::\mtd}$ & $|\mtd| + |v| + |\mtc|+|v|$\\
-        $\rightarrow^*$ & $ \etatd{-, \mtc[v], \square[x/v]::\mtd}$ & $|\mtd| + |v| + |\mtc| +|v|$ &Lemme \ref{lemmaportugal}\\ 
-        $\rightarrow_{gc}$ & $ \etatd{-, \mtc[v], \mtd}$ & $|\mtd| + |v| + |\mtc|$& $x\notin fv(\mtc[v])$\\ 
+                   & $\etatz{-,\mtl[\lambda x.t]~v,\mtd}$ & $|\mtd|+|v|+|\mtl|+|t|+1$\\
+        $\rightsquigarrow_{db}$ & $ \etatu{v, \mtl[ \lambda x.t], \mtd}$ & $|\mtd| + |v| + |\mtl|+|t|+1$\\ 
+        $\rightsquigarrow^*_{rdb}$ & $ \etatu{v, \lambda x.t ,\mtl::\mtd}$ & $|\mtd| + |v| + |\mtl|+|t|+1$& Lemme \ref{lemmaplouf2}\\
+        $\rightsquigarrow_{fdb}$ & $ \etatd{-, t ,\square[x/v]::\mtl::\mtd}$ & $|\mtd| + |v| + |\mtl|+|t|$\\
+        $\rightsquigarrow_{gc}$ & $ \etatd{-, t ,\mtl::\mtd}$ & $|\mtd| + |\mtl|+|t|$& $x\notin fv(t)$\\
+        $\rightsquigarrow^*$ & $ \etatd{-, \mtl[t],\mtd}$ & $|\mtd| + |\mtl|+|t|$ &Lemme \ref{lemmaportugal}\\ 
         \bottomrule
       \end{tabular}\\
-      La taille maximum utilisée est $2 \times |v| + |\mtc| +|\mtd| \le 2\times S +|\mtd|$.
+      La taille maximum utilisée est $S +|\mtd| \le 2\times S +|\mtd|$.
+    \item \underbar{Cas GC~:} Nous avons $t[x/v] \rightarrow t'$ sous hypothèse que $t \rightarrow t'$ et $x\notin fv(t')$. Donc $S = max(|t[x/v]|, |t'|)$. Nous notons $S' = |t \rightarrow t'| = max(|t|, |t'|)$.\\
+      \begin{tabular}{@{}l c c c@{}}
+        \toprule
+        transition & état & taille & justification\\
+        \midrule
+                   & $\etatz{-,t[x/v],\mtd}$ & $|\mtd|+|v|+|t|$\\
+        $\rightsquigarrow_{us}$ & $ \etatz{-, t, \square[x/v]::\mtd}$ & $|\mtd| + |v| + |t|$\\ 
+        $\rightsquigarrow^*$ & $ \etatd{-, t' ,\square[x/v]::\mtd}$ & $|\mtd| + |v| + |t'|$& Par hypothèse d'induction\\
+      $\rightsquigarrow_{gc}$ & $ \etatd{-, t' ,\mtd}$ & $|\mtd| + |t'|$&$ x\notin fv(t') $\\
+        \bottomrule
+      \end{tabular}\\
+      Notre hypothèse d'induction indique également que la transition de la deuxième ligne vers la troisième ligne se fait avec un espace $2\times S' +|\mtd| + |v|$. 
+      La taille maximum utilisée est $2\times S' +|\mtd| \le 2\times S +|\mtd|$.
   \end{itemize}
 \end{proof}
 
