@@ -1,0 +1,240 @@
+
+\documentclass{article}
+\usepackage[french]{babel} \frenchbsetup{og=«,fg=»}
+\usepackage{graphicx}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{xcolor}
+\usepackage{amsthm}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{stmaryrd}
+\usepackage{proof}
+\usepackage{booktabs}
+\usepackage{listings}
+\usepackage{langs}
+
+\definecolor{link_color}{RGB}{0,0,200}
+
+\usepackage[bookmarks=true,colorlinks=true,
+    citecolor={link_color}, filecolor={link_color},
+    urlcolor={link_color}, linkcolor={link_color},
+    pdfstartview={XYZ null null 1.22}, hyperindex=true]{hyperref}
+
+
+
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}[section]
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+
+\newcommand{\etat}[1]{\langle #1 \rangle}
+\newcommand{\etatz}[1]{\langle #1 \rangle_0}
+\newcommand{\etatu}[1]{\langle #1 \rangle_1}
+\newcommand{\etatd}[1]{\langle #1 \rangle_2}
+\newcommand{\mcc}{\mathcal{C}}
+\newcommand{\mcl}{\mathcal{L}}
+\newcommand{\mce}{\mathcal{E}}
+\newcommand{\llb}{\llbracket}
+\newcommand{\rrb}{\rrbracket}
+\newcommand{\ra}{\rightarrow{}}
+\newcommand{\rsa}{\rightsquigarrow{}}
+
+\title{Deux modèles, deux mesures}
+\author{Ewen DUFOUR\\[1ex]
+{\small Encadré par}\\ {\small Thibaut BALABONSKI}}
+\date{mars - juillet 2025}
+\begin{document}
+\maketitle
+\begin{abstract}
+Dans ce travail, nous définissons une mesure d'espace pour le LSC. Nous adaptons ensuite la stratégie d'appel par valeur au LSC. Enfin, nous montrons que cette stratégie munie de la mesure définie constitue un modèle de calcul raisonnable pour l'espace.
+\end{abstract}
+\section{Introduction}
+\section{Contexte et problème étudié}
+%\paragraph{La complexité spatiale.}
+\paragraph{L'invariance des modèles.} Énoncée par Peter van Emde Boas et Cees Slot~\cite{slot1988problem}, cette thèse affirme qu'il existe une classe de modèles de calcul, et que tous les modèles au sein de cette classe peuvent se simuler entre eux avec un surcoût polynomial en temps et linéaire en espace. En particulier, cette classe contiendrait les machines de Turing, les RAM, etc.  
+%\paragraph{Le $\lambda$-calcul.}
+%Le $\lambda$-calcul est un modèle de calcul introduit par Alonzo Church dans les années 30.
+\paragraph{Le Linear Substitution Calculus.}
+Le LSC est une variante du $\lambda$-calcul introduite par Accattoli et co-auteurs~\cite{accattoli2014nonstandard}.
+Les termes sont donnés par la grammaire suivante~:
+\begin{align*}
+    t ::=~x~|~\lambda x.t~|~t~t~|~t[x/t]
+\end{align*}
+En plus des termes habituels du $\lambda$-calcul, nous ajoutons une construction $t[x/t']$ qui explicite la substitution de $x$ par $t'$ dans $t$.
+Nous ajoutons à ces termes les règles de réduction suivantes~:
+\begin{align*}
+    \mcl[\lambda x.t]~u~&\ra_{d\beta}~\mcl[t[x/u]]\\
+    \mcc\llb x\rrb[x/u]~&\ra_{ls}~\mcc\llb u\rrb[x/u]\\
+    t[x/u]~&\ra_{gc}~t & x\notin fv(t)
+\end{align*}
+où $\mcc$ et $\mcl$ sont des contextes construits par les grammaires~:
+\[\mcl ::= \square~|~\mcl[x/t]\]
+\[\mcc ::= \square~|~\mcc[x/t]~|~t[x/\mcc]~|~\mcc~t~|~t~\mcc~|~\lambda x.\mcc\]  
+\paragraph{Objectif.} 
+Nous souhaitons montrer que le LSC est un modèle de calcul raisonnable pour l'espace. Cependant, plusieurs difficultés se présentent. D'une part, il nous faut définir une mesure d'espace pour le LSC et fixer une stratégie de réduction. Bien qu'étant naturelle sur les machines de Turing, la notion d'espace sur des $\lambda$-termes n'est pas immédiate. D'autre part, il faut montrer que le LSC muni de la stratégie et de la mesure peut être simulé par les machines de Turing et inversement avec un surcoût d'espace linéaire. Une autre difficulté se présentant est la possibilité de capturer les classes de complexité sous-linéaires, en particulier LOG-SPACE.
+Afin de pouvoir caractériser cette classe de complexité, les machines de Turing distinguent un ruban d'entrée qu'elles ne comptent pas comme de l'espace utilisé et ne comptent que l'espace de travail. Ce procédé est beaucoup moins naturel sur les $\lambda$-termes, car ils représentent à la fois le~\og programme~\fg, les~\og  données d'entrée~\fg~et les~\og calculs~\fg~en cours. 
+\section{Contribution}
+\subsection{Le LSC en appel par valeur faible}
+\subsubsection{Stratégie de réduction}
+Pour cette stratégie de réduction, nous distinguons une classe de termes que nous appellerons des valeurs.
+Ceux-ci sont donnés par la grammaire~:
+\[v ::= \lambda x.t~|~v[x/t]\]
+Les valeurs sont donc les abstractions munies d'une \og liste\fg~de substitutions. Nous distinguons clairement ici le concept de fermeture.
+De plus, nous restreignons les contextes que nous utiliserons dans nos réductions à ceux donnés par la grammaire : 
+\[\mcc ::= \square~|~\mcc[x/t]~|~\mcc~t~|~t~\mcc\]
+Nous remarquons que l'on ne permet plus la substitution sous les abstractions ni dans les substitutions explicites.
+Notre stratégie est donc définie ainsi~:
+\begin{figure}[!h]
+    \centering
+    \begin{align*}
+    &\infer[LA]{t~u\rightarrow t'~u}{t \rightarrow t'}
+ &\infer[RA]{v~t\rightarrow v~t'}{t \rightarrow t'}\\
+&\infer[GC]{t[x/u]\rightarrow t'}{t \rightarrow t' & x \notin fv(t') }
+&\infer[US]{t[x/u]\rightarrow t'[x/u]}{t \rightarrow t' & x \in fv(t')}\\
+&\infer[LS]{\mathcal{C}\llbracket x \rrbracket [x/u]\rightarrow \mathcal{C}\llbracket u \rrbracket [x/u]}{x \in fv(\mathcal{C}\llbracket u \rrbracket) }
+&\infer[LSGC]{\mathcal{C}\llbracket x \rrbracket [x/u]\rightarrow \mathcal{C}\llbracket u \rrbracket}{x \notin fv(\mathcal{C}\llbracket u \rrbracket) }\\
+&\infer[DB]{\mathcal{L}[\lambda x.t]~v \rightarrow \mathcal{L}[t[x/v]]}{x\in fv(t)}
+&\infer[DBGC]{\mathcal{L}[\lambda x.t]~v \rightarrow \mathcal{L}[t]}{x\notin fv(t)}
+\end{align*}
+    \caption{Règles de réduction du WCBVLSC}
+\end{figure}
+\paragraph{Explications.}
+Les règles $RA$ et $LA$ sont la base de l'appel par valeur. Nous commençons par évaluer le terme de gauche d'une application jusqu'à obtenir une abstraction avec ou sans environnement, puis on évalue le terme de droite jusqu'à obtenir une valeur. Ensuite, les règles $DB$ et $DBGC$ interviennent. Leur rôle est d'effectuer l'application et de ne garder la substitution explicite que si elle est utile ($DBGC$ étant la composition de $\ra_{d\beta}$ et $\ra_{gc}$). Les règles $LS$ et $LSGC$ servent à effectuer une substitution lorsque l'on évalue une variable et à supprimer la substitution explicite si elle devient inutile. Enfin, les règles $GC$ et $US$ vont aller évaluer les termes sous les substitutions explicites et les supprimer si elles deviennent inutiles après l'évaluation du sous terme. Cela permet de propager le \og gc \fg~et de ne garder que les substitutions utiles.
+
+Nous considérons que les termes sont représentés en utilisant des indices de de Bruijn. Cependant, les indices peuvent faire référence soit aux abstractions, soit aux substitutions explicites. Voici deux exemples de termes avec cette notation~:
+\begin{align*}
+    (\lambda.0~1)[\lambda.0] &= (\lambda x.x~y)[y/\lambda z.z]\\
+    \lambda.(0~1)[\lambda.0] &=\lambda x.(y~x)[y/\lambda z.z]
+\end{align*}
+De plus, les termes au sein des substitutions explicites peuvent elles-mêmes faire référence à d'autres substitutions. Il nous faut donc faire attention à bien gérer les indices lors des $DB$, $DBGC$, $LS$, $LSGC$ et $GC$. 
+\subsubsection{Mesure d'espace pris par les termes}
+Nous définissons la mesure d'espace ainsi~:
+\begin{align*}
+    |x| &= |dB(x)|\\
+    |\lambda x.t| &= 1 + |t|\\
+    |t~u| &= |t|+|u|\\
+    |t[x/u]| &= |t|+|u|
+\end{align*}
+L'utilisation d'indices de de Bruijn nous permet de ne pas avoir à stocker les variables des substitutions explicites, ce qui explique leurs coûts. 
+Nous étendons cette définition aux contextes~:
+\begin{align*}
+    |\square|&=0\\
+    |\mcc~t| &= |\mcc| + |t| \\
+    |v~\mcc| &= |v| + |\mcc| \\
+    |\mcc[x/t]| &= |\mcc| + |t|
+\end{align*}
+\subsection{La machine FLAME}
+FLAME est une machine abstraite qui implante la stratégie d'appel par valeur pour les termes du LSC. Elle utilise trois structures pour effectuer ses transitions~:
+\begin{enumerate}
+    \item Une section qui stocke possiblement l'argument d'une application et sa \og distance\fg~par rapport à l'abstraction.
+    \item Une entrée qui décrit le terme en train d'être évalué
+    \item Une pile de contextes
+\end{enumerate}  
+\subsection{Fonctionnement}
+L'évaluation des termes se fait en trois phases~: la décomposition, la réduction et la reconstruction. 
+
+\paragraph{Décompostion.}
+Dans le premier temps, la machine décompose les termes jusqu'à trouver une réduction possible (substitution ou $\beta$-réduction). La machine sépare les applications en évaluant un des membres et stocke l'autre sur sa pile de contextes. De même, elle stocke sur sa pile les substitutions et évalue leur sous terme gauche (si elle ne fait pas partie d'une valeur). Cette phase d'exploration est réalisée par les transition dont l'état de départ est 0. 
+
+\paragraph{Réduction.}
+Lorsque la machine à trouvé une réduction, elle va effectuer une transition $\rsa_{db}$ et rentrer dans l'état 1 si c'est une $\beta$-réduction, ou effectuer une transition $\rsa_{ls}$ et entrer dans l'état 2 si c'est une substitution. La machine se sert de l'état 1 pour réaliser une réduction du genre $d\beta$, il est utilisé pour calculer le décalage des indices de de Bruijn et mettre la nouvelle substitution sous les potentielles substitutions déja présentes. La machine entre ensuite dans l'état 2.
+
+\paragraph{Reconstruction.}
+Après avoir effectuer une réduction, la machines va reconstruire le terme. Lors de cette phase, elle récupère les sous termes de sa pile de contexte et reconstruit le terme. Lorsqu'elle trouve une substitutions dans sa pile de contexte, elle vérifie que la substituions est bien liée dans son terme. Si ce n'est pas le cas elle supprime cette substitution lors de la transition $\rsa_{gc}$. Dans le cas contraire, elle replace simplement la substitution sur son terme courant.
+
+\paragraph{Relancement.}
+Lorsque la machine à fini de reconstruire un terme, si celui-ci est une valeur, elle entre dans l'état 3 et s'arrête complètement. Dans le cas contraire, la machine retourne dans l'état 0 et effectue un nouveau cycle d'évaluation.
+
+\subsection{Mesure d'espace}
+Afin d'effectuer nos analyses sur l'espace pris par notre machine, nous définissons la mesure suivante~:
+\begin{align*}
+    |\etat{(v,n), t, \mcc}_e| = |t| + |v| + |n| + |\mcc|
+\end{align*}
+Dans le cas où l'entrée \textbf{arg} de la machine est \textbf{-}, nous prenons comme taille $0$. 
+L'entrée \textbf{état} de la machine ne pouvant être que \textbf{0},\textbf{1},\textbf{2} ou \textbf{3} nous ne comptons pas cette information dans nos calculs.
+\subsection{Simulation du LSC}
+\subsection{Simulation de FLAME}
+Montrons maintenant que FLAME peut être simulée par des machines de Turing avec un surcoût en espace linéaire.
+Pour ce faire, il nous faut trois choses~:
+\begin{enumerate}
+    \item Un encodage des termes ayant un sucoût d'espace linéaire par rapport à la taille de nos termes.
+    \item Des structures de données pour les différentes entrées de la machines.
+    \item Des fonctions \textbf{red}, \textbf{lift}, \textbf{isFree} et \textbf{isValue}. Ces fonctions vont respectivement réduire ou augmenter les indices de de Bruijn dans un terme encodé, vérifier qu'une variable est libre dans un terme encodé et vérifier qu'un terme encodé est une valeur.
+    De nouveau, ces fonctions doivent se faire avec un coût spacial au plus linéaire.
+\end{enumerate}
+
+\paragraph{Encodage} L'encodage des termes se fait via une fonction récurssive défine ainsi~:
+\begin{align*}
+    \mce(x) &=x\\
+    \mce(\lambda .t) &=\lambda \mce(t) A\\
+    \mce(t~u)&=(\mce(t)\text{\textvisiblespace}\mce(u))\\
+    \mce(t[v])&=S\mce(t)[\mce(v)]
+\end{align*}
+Nous partons du principe que les termes avant encodage sont sous le forme indice de de Bruijn et les variables sont écrit en base 2. Nous avons ajouter un symbole $A$ pour délimiter la fin d'une abstraction et un symbole $S$ pour définir le début d'une substitution explicite. Enfin, nous ajoutonsl des parenthèse et un symbole d'espace aux applications pour délimiter chaque membres. Il est direct que notre encodage à une taille linéaire en la taille du terme non encodé.
+\paragraph{Choix du modèle de calcul}
+Pour représenter les différentes entrées de la machines, nous allons utiliser une machine à quatre rubans. Pour les arguments, nous écrivons l'encodage du terme suivi par le nombre $n$ (la \og distance à l'abstraction) sur le premier ruban. Les termes sont décrits par leur encodage sur le deuxième ruban. Nous sauvegardons les contextes sur me troisième ruban où nous écrivons les encodages des sous-termes précédés par des symboles qui permettent de différencier les types de contexte (LS, RA et LA dans FLAME). Sur le dernier ruban, nous gardons en mémoire l'état de la machine et écrivons les résultats des fonctions \textbf{isFree} et \textbf{isValue}.
+Ce choix de modèle fonctionne car  les machines de Turing à plusieurs rubans peuvent être simulée par des machines à un ruban avec un espace linéaire (Théorème 1 des travaux de van Emde Boas \cite{van1987machine}). 
+\subsubsection{Fonctions de gestion}
+
+Maintenant, voyons comment effectuer les différentes opérations que fait la machine sur notre encodage.
+
+\paragraph{isValue.} Il suffit de parcourir l'encodage de gauche à droite. Si nous rencontrons sur le symbole $S$, nous continuons. Si le symbole rencontré est $\lambda$ renvoyer $vrai$, sinon renvoyer $faux$. Tout cela se fait en espace constant.
+\paragraph{isFree.} Le programme suivant permet de calculer si une variable est libre dans l'encodage d'un terme.
+\begin{lstlisting}
+let rec free (n : int) (e : encoding) : bool =
+  if n < 0 then false
+  else
+    match e with
+    | [] -> false
+    | BeginLambda :: el -> free (n + 1) el
+    | EndLambda :: el -> free (n - 1) el
+    | BeginSubst :: el -> free (n + 1) el
+    | LeftPar :: el | RightPar :: el | RightBrack :: el | Space :: el ->
+        free n el
+    | LeftBrack :: el -> free (n - 1) el
+    | Num i :: el -> if i = n then true else free n el
+\end{lstlisting}
+
+\subsection{Simulation du $\lambda$-calcul} 
+\section{Revue de la littérature}
+\section{Conclusion et perspectives}
+\section{Remerciements}
+Je tiens à remercier très chaleureusement Thibaut pour avoir encadré ce stage ainsi que pour toute l'aide qu'il m'a apporté. Je tiens également à remercier Travis pour son aide durant ce stage. Enfin, je tiens à remercier l'équipe du LMF qui s'est montrée chaleureuse et très accueillante.
+\bibliographystyle{abbrv}
+\bibliography{main}
+\section*{Annexe}
+\begin{figure}[ht]
+\label{FLAME}
+\centering
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{@{}l l l l l l l l l l@{}}
+\toprule
+\textbf{arg} & \textbf{terme} & \textbf{contexte} & \textbf{état} & \textbf{transition}& \textbf{arg} & \textbf{terme} & \textbf{contexte} & \textbf{état} \\
+\midrule
+
+– & $t[ u ] $ & $C$ & 0 & $\rsa_{us}$ & – & $t$ & $\textsf{LS}(u) :: C$ & 0  \\
+
+- & $t~u$ & $C$ & 0 & $\rsa_{lapp}$ & – & $t$ & $\textsf{RA}(u) :: C$ & 0  \\
+- & $v~t$ & $C$ & 0 & $\rsa_{rapp}$ & – & $t$ & $\textsf{LA}(v) :: C$ & 0  \\
+- & $n$  & $C$ & 0 & $\rsa_{ls}$ & - & $\uparrow^{n+1} t$ & $C$ & 2 & $\textsf{LS}(t)=\textsf{nth\_subst}(C)$ \\
+- & $v_1~v_2$  & $C$ & 0 & $\rsa_{db}$ & $(v_2,0)$ & $v_1$ & $C$ & 1  \\
+
+$(v_2, n)$ & $v_1[ t ]$ &$C$ & 1 & $\rsa_{rdb}$ & $(v_2, n+1)$ & $v_1$ & $\textsf{LS}(t) :: C$ & 1\\ 
+$(v, n)$ & $\lambda.t $ &$C$ & 1 & $\rsa_{fdb}$ & - & $t$ & $\textsf{LS}(\uparrow^{n}v) :: C$ & 2\\
+
+-&$v$ & $[]$ & 2 & $\rsa_{stop}$ & -& $v$ &$[]$ & 3 \\
+-&$t$ & $[]$ & 2 & $\rsa_{dive}$ & -& $t$ &$[]$ & 0 \\
+-&$t$ & $\textsf{LS}(u) :: C$ & 2 & $\rsa_{gc}$ & -& $\downarrow t$ &$C$ & 2 & $0\notin \textsf{fv}(t)$ \\
+-&$t$ & $\textsf{LS}(u) :: C$ & 2 & $\rsa_{bsubst}$ & -& $t[ u ]$ &$C$ & 2 & $0\in \textsf{fv}(t)$ \\
+-&$t$ & $\textsf{RA}(u) :: C$ & 2 & $\rsa_{blapp}$ & -& $t~u$ &$C$ & 2 \\
+-&$t$ & $\textsf{LA}(u) :: C$ & 2 & $\rsa_{brapp}$ & -& $u~t$ &$C$ & 2 \\
+
+\bottomrule
+\end{tabular}
+}
+\caption{Transitions de FLAME.}
+\end{figure}
+
+
+\end{document}
