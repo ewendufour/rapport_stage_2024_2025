@@ -24,21 +24,23 @@
 
 
 \theoremstyle{definition}
-\newtheorem{definition}{Definition}[section]
-\newtheorem{theorem}{Theorem}[section]
-\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{definition}{Définition}[section]
+\newtheorem{theorem}{Théorem}[section]
+\newtheorem{lemma}[theorem]{Lemme}
+\newtheorem{proposition}[theorem]{Proposition}
 
 \newcommand{\etat}[1]{\langle #1 \rangle}
 \newcommand{\etatz}[1]{\langle #1 \rangle_0}
 \newcommand{\etatu}[1]{\langle #1 \rangle_1}
 \newcommand{\etatd}[1]{\langle #1 \rangle_2}
+\newcommand{\etatt}[1]{\langle #1 \rangle_3}
 \newcommand{\mcc}{\mathcal{C}}
 \newcommand{\mcl}{\mathcal{L}}
 \newcommand{\mce}{\mathcal{E}}
 \newcommand{\llb}{\llbracket}
 \newcommand{\rrb}{\rrbracket}
-\newcommand{\ra}{\rightarrow{}}
-\newcommand{\rsa}{\rightsquigarrow{}}
+\newcommand{\ra}{\rightarrow}
+\newcommand{\rsa}{\rightsquigarrow}
 
 \title{Deux modèles, deux mesures}
 \author{Ewen DUFOUR\\[1ex]
@@ -158,29 +160,33 @@ L'entrée \textbf{état} de la machine ne pouvant être que \textbf{0},\textbf{1
 Montrons maintenant que FLAME peut être simulée par des machines de Turing avec un surcoût en espace linéaire.
 Pour ce faire, il nous faut trois choses~:
 \begin{enumerate}
-    \item Un encodage des termes ayant un sucoût d'espace linéaire par rapport à la taille de nos termes.
-    \item Des structures de données pour les différentes entrées de la machines.
+    \item Un encodage des termes ayant un surcoût d'espace linéaire par rapport à la taille de nos termes.
+    \item Des structures de données pour les différentes entrées de la machine.
     \item Des fonctions \textbf{red}, \textbf{lift}, \textbf{isFree} et \textbf{isValue}. Ces fonctions vont respectivement réduire ou augmenter les indices de de Bruijn dans un terme encodé, vérifier qu'une variable est libre dans un terme encodé et vérifier qu'un terme encodé est une valeur.
-    De nouveau, ces fonctions doivent se faire avec un coût spacial au plus linéaire.
+    De nouveau, ces fonctions doivent se faire avec un coût spatial au plus linéaire.
 \end{enumerate}
 
-\paragraph{Encodage} L'encodage des termes se fait via une fonction récurssive défine ainsi~:
+\paragraph{Encodage} L'encodage des termes se fait via une fonction récursive définie ainsi~:
 \begin{align*}
     \mce(x) &=x\\
     \mce(\lambda .t) &=\lambda \mce(t) A\\
     \mce(t~u)&=(\mce(t)\text{\textvisiblespace}\mce(u))\\
     \mce(t[v])&=S\mce(t)[\mce(v)]
 \end{align*}
-Nous partons du principe que les termes avant encodage sont sous le forme indice de de Bruijn et les variables sont écrit en base 2. Nous avons ajouter un symbole $A$ pour délimiter la fin d'une abstraction et un symbole $S$ pour définir le début d'une substitution explicite. Enfin, nous ajoutonsl des parenthèse et un symbole d'espace aux applications pour délimiter chaque membres. Il est direct que notre encodage à une taille linéaire en la taille du terme non encodé.
-\paragraph{Choix du modèle de calcul}
-Pour représenter les différentes entrées de la machines, nous allons utiliser une machine à quatre rubans. Pour les arguments, nous écrivons l'encodage du terme suivi par le nombre $n$ (la \og distance à l'abstraction) sur le premier ruban. Les termes sont décrits par leur encodage sur le deuxième ruban. Nous sauvegardons les contextes sur me troisième ruban où nous écrivons les encodages des sous-termes précédés par des symboles qui permettent de différencier les types de contexte (LS, RA et LA dans FLAME). Sur le dernier ruban, nous gardons en mémoire l'état de la machine et écrivons les résultats des fonctions \textbf{isFree} et \textbf{isValue}.
-Ce choix de modèle fonctionne car  les machines de Turing à plusieurs rubans peuvent être simulée par des machines à un ruban avec un espace linéaire (Théorème 1 des travaux de van Emde Boas \cite{van1987machine}). 
+Nous partons du principe que les termes avant encodage sont sous la forme indice de de Bruijn et les variables sont écrit en base 2. Nous avons ajouté un symbole $A$ pour délimiter la fin d'une abstraction et un symbole $S$ pour définir le début d'une substitution explicite. Enfin, nous ajoutonsl des parenthèse et un symbole d'espace aux applications pour délimiter chaque membres. Il est direct que notre encodage à une taille linéaire en la taille du terme non encodé.
+Par la suite, nous noterons $\bar{t}$ l'encodage du terme $t$.
+\paragraph{Choix du modèle de calcul.}
+Pour représenter les différentes entrées de la machine, nous allons utiliser une machine à quatre rubans. Pour les arguments, nous écrivons l'encodage du terme suivi par le nombre $n$ (la \og distance à l'abstraction) sur le premier ruban. Les termes sont décrits par leur encodage sur le deuxième ruban. Nous sauvegardons les contextes sur me troisième ruban où nous écrivons les encodages des sous-termes précédés par des symboles qui permettent de différencier les types de contexte (LS, RA et LA dans FLAME). Sur le dernier ruban, nous gardons en mémoire l'état de la machine et écrivons les résultats des fonctions \textbf{isFree} et \textbf{isValue}.
+Ce choix de modèle fonctionne, car les machines de Turing à plusieurs rubans peuvent être simulées par des machines à un ruban avec un espace linéaire (Théorème 1 des travaux de van Emde Boas \cite{van1987machine}). 
 \subsubsection{Fonctions de gestion}
 
 Maintenant, voyons comment effectuer les différentes opérations que fait la machine sur notre encodage.
+Pour plus de clarté, nous allons étudier des programmes qui calculent ces fonctions.
 
 \paragraph{isValue.} Il suffit de parcourir l'encodage de gauche à droite. Si nous rencontrons sur le symbole $S$, nous continuons. Si le symbole rencontré est $\lambda$ renvoyer $vrai$, sinon renvoyer $faux$. Tout cela se fait en espace constant.
-\paragraph{isFree.} Le programme suivant permet de calculer si une variable est libre dans l'encodage d'un terme.
+\paragraph{isFree.} Le programme en figure \ref{fig:isFree} permet de décider si une variable est libre dans l'encodage d'un terme.
+\begin{figure}[h]
+  \begin{center}    
 \begin{lstlisting}
 let rec free (n : int) (e : encoding) : bool =
   if n < 0 then false
@@ -190,17 +196,79 @@ let rec free (n : int) (e : encoding) : bool =
     | BeginLambda :: el -> free (n + 1) el
     | EndLambda :: el -> free (n - 1) el
     | BeginSubst :: el -> free (n + 1) el
-    | LeftPar :: el | RightPar :: el | RightBrack :: el | Space :: el ->
+    | (LeftPar  | RightPar  | RightBrack | Space) :: el ->
         free n el
     | LeftBrack :: el -> free (n - 1) el
     | Num i :: el -> if i = n then true else free n el
 \end{lstlisting}
-
+  \end{center}
+  \caption{Programme OCaml décidant si une variable est libre.}\label{fig:isFree}
+\end{figure}
+L'algorithme n'accède à l'encodage qu'en lecture et le parcours une unique fois de gauche à droite. Ainsi, celui-ci n'a besoin de garder en mémoire que le nombre de lieurs rencontrés.
+Le programme s'exécute donc avec un espace logarithmique en la longueur de l'encodage.
+\paragraph{lift.}
+\begin{figure}[h]
+  \begin{center}
+\begin{lstlisting}
+let lift_encoding shift e =
+  let rec aux shift bound_nb acc = function
+    | [] -> List.rev acc
+    | Num n :: es when n < bound_nb -> aux shift bound_nb (Num n :: acc) es
+    | Num n :: es -> aux shift bound_nb (Num (n + shift) :: acc) es
+    | BeginLambda :: es -> aux shift (bound_nb + 1) (BeginLambda :: acc) es
+    | BeginSubst :: es -> aux shift (bound_nb + 1) (BeginSubst :: acc) es
+    | LeftBrack :: es -> aux shift (bound_nb - 1) (LeftBrack :: acc) es
+    | RightBrack :: es -> aux shift bound_nb (RightBrack :: acc) es
+    | Space :: es -> aux shift bound_nb (Space :: acc) es
+    | LeftPar :: es -> aux shift bound_nb (LeftPar :: acc) es
+    | RightPar :: es -> aux shift bound_nb (RightPar :: acc) es
+    | EndLambda :: es -> aux shift (bound_nb - 1) (EndLambda :: acc) es
+  in
+  aux shift 0 [] e
+\end{lstlisting}
+  \end{center}
+  \caption{Programme OCaml augmentant les indices dans un encodage.}\label{fig:lift}
+\end{figure}
+Le programme en figure~\ref{fig:lift} permet de calculer l'augmentation des indices de de Bruijn dans un terme encodé.
+Pour ce faire, la fonction garde en mémoire l'encodage en augmentant certains indices et change également le nombre de lieurs rencontrés. 
+La sauvegarde de l'encodage se fait en espace linéaire en la longueur de l'encodage. 
+La taille du nombre de lieurs est quant à elle logarithmique en la longueur de l'encodage.
+La fonction s'exécute ainsi dans un espace linéaire en la longueur de l'encodage.
+\paragraph{red.}
+\begin{figure}[h]
+  \begin{center}
+\begin{lstlisting}
+let red_encoding e =
+  let rec aux n acc = function
+    | [] -> List.rev acc
+    | Num n' :: es when n' > n -> aux n (Num (n' - 1) :: acc) es
+    | Num n' :: es -> aux n (Num n' :: acc) es
+    | BeginLambda :: es -> aux (n + 1) (BeginLambda :: acc) es
+    | BeginSubst :: es -> aux (n + 1) (BeginSubst :: acc) es
+    | LeftBrack :: es -> aux (n - 1) (LeftBrack :: acc) es
+    | RightBrack :: es -> aux n (RightBrack :: acc) es
+    | Space :: es -> aux n (Space :: acc) es
+    | LeftPar :: es -> aux n (LeftPar :: acc) es
+    | RightPar :: es -> aux n (RightPar :: acc) es
+    | EndLambda :: es -> aux (n - 1) (EndLambda :: acc) es
+  in
+  aux 0 [] e
+\end{lstlisting}
+  \end{center}
+  \caption{Programme OCaml réduisant les indices dans un encodage.}\label{fig:red}
+\end{figure}
+Pour des raisons similaires à celles données pour la fonction lift, le programme en figure \ref{fig:red} calcule la réduction des indices de de Bruijn libre dans un encodage avec un espace linéaire.\\\\
+Pour toutes les raisons énoncées, nous conjecturons que la proposition suivante est vraie.
+\begin{proposition}
+  Il existe une machine de Turing $\mathcal{M}$ et une constante $k$ telles que si $\etatz{-, t, \square} \rsa^* \etatt{-, u, \square}$ avec un espace $S$, alors
+  $\mathcal{M}~\bar{t} \ra^*~\bar{u}$ avec un espace $k\times S$. 
+\end{proposition}
 \subsection{Simulation du $\lambda$-calcul} 
 \section{Revue de la littérature}
 \section{Conclusion et perspectives}
 \section{Remerciements}
-Je tiens à remercier très chaleureusement Thibaut pour avoir encadré ce stage ainsi que pour toute l'aide qu'il m'a apporté. Je tiens également à remercier Travis pour son aide durant ce stage. Enfin, je tiens à remercier l'équipe du LMF qui s'est montrée chaleureuse et très accueillante.
+Je tiens à remercier très chaleureusement Thibaut pour avoir encadré ce stage ainsi que pour toute l'aide qu'il m'a apporté. 
+Je tiens également à remercier Travis pour son aide durant ce stage. Enfin, je tiens à remercier l'équipe du LMF qui s'est montrée chaleureuse et très accueillante.
 \bibliographystyle{abbrv}
 \bibliography{main}
 \section*{Annexe}
