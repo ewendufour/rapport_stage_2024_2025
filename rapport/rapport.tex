@@ -52,12 +52,18 @@
 \begin{document}
 \maketitle
 \begin{abstract}
-Dans ce travail, nous définissons une mesure d'espace pour le LSC. 
-Nous adaptons ensuite la stratégie d'appel par valeur au LSC. 
-Enfin, nous montrons que cette stratégie munie de la mesure définie constitue un modèle de calcul raisonnable pour l'espace en passant par une machine abstraite.
 \end{abstract}
 \section{Introduction}
-\paragraph{L'invariance des modèles.} Énoncée par Peter van Emde Boas et Cees Slot~\cite{slot1988problem}, cette thèse affirme qu'il existe une classe de modèles de calcul, et que tous les modèles au sein de cette classe peuvent se simuler entre eux avec un surcoût polynomial en temps et linéaire en espace. En particulier, cette classe contiendrait les machines de Turing, les RAM, etc.  
+ Énoncée par Peter van Emde Boas et Cees Slot~\cite{slot1988problem}, 
+ la thèse d'invariance des modèles affirme qu'il existe une classe de modèles de calcul, 
+ et que tous les modèles au sein de cette classe peuvent se simuler entre eux avec un surcoût polynomial en temps et linéaire en espace. 
+ En particulier, cette classe contiendrait les machines de Turing, les RAM, etc.
+
+ Le $\lambda$-calcul est un modèle de calcul servant de base aux langages de programmation fonctionnels. 
+ Il est donc naturel de nous assurer que ce modèle est bien dans cette classe.
+ Bien qu'étant naturelle sur les machines de Turing, 
+ les notions de temps et d'espace sur les $\lambda$-termes et leurs réductions ne sont pas immédiates.
+
 \paragraph{Le Linear Substitution Calculus.}
 Le LSC est une variante du $\lambda$-calcul introduite par Accattoli et co-auteurs~\cite{accattoli2014nonstandard}.
 Les termes sont donnés par la grammaire suivante~:
@@ -74,11 +80,16 @@ Nous ajoutons à ces termes les règles de réduction suivantes~:
 où $\mcc$ et $\mcl$ sont des contextes construits par les grammaires~:
 \[\mcl ::= \square~|~\mcl[x/t]\]
 \[\mcc ::= \square~|~\mcc[x/t]~|~t[x/\mcc]~|~\mcc~t~|~t~\mcc~|~\lambda x.\mcc\]  
-\paragraph{Objectif.} 
-Nous souhaitons montrer que le LSC est un modèle de calcul raisonnable pour l'espace. Cependant, plusieurs difficultés se présentent. D'une part, il nous faut définir une mesure d'espace pour le LSC et fixer une stratégie de réduction. Bien qu'étant naturelle sur les machines de Turing, la notion d'espace sur des $\lambda$-termes n'est pas immédiate. D'autre part, il faut montrer que le LSC muni de la stratégie et de la mesure peut être simulé par les machines de Turing et inversement avec un surcoût d'espace linéaire. Une autre difficulté se présentant est la possibilité de capturer les classes de complexité sous-linéaires, en particulier LOG-SPACE.
+\paragraph{Objectifs.} 
+Nous souhaitons montrer que le LSC est un modèle de calcul raisonnable pour l'espace. 
+Cependant, plusieurs difficultés se présentent. 
+D'une part, il nous faut définir une mesure d'espace pour le LSC et fixer une stratégie de réduction. 
+D'autre part, il faut montrer que le LSC muni de la stratégie et de la mesure peut être simulé par les machines de Turing et inversement avec un surcoût d'espace linéaire. Une autre difficulté se présentant est la possibilité de capturer les classes de complexité sous-linéaires, en particulier LOG-SPACE.
 Afin de pouvoir caractériser cette classe de complexité, les machines de Turing distinguent un ruban d'entrée qu'elles ne comptent pas comme de l'espace utilisé et ne comptent que l'espace de travail. Ce procédé est beaucoup moins naturel sur les $\lambda$-termes, car ils représentent à la fois le~\og programme~\fg, les~\og  données d'entrée~\fg~et les~\og calculs~\fg~en cours. 
-\section{Contribution}
-\subsection{Le LSC en appel par valeur faible}
+\paragraph{Travaux connexes.}
+
+\section{Formalismes}
+\subsection{LS(G)C}
 \subsubsection{Stratégie de réduction}
 Pour cette stratégie de réduction, nous distinguons une classe de termes que nous appellerons des valeurs.
 Ceux-ci sont donnés par la grammaire~:
@@ -100,7 +111,7 @@ Notre stratégie est donc définie ainsi~:
 &\infer[DB]{\mathcal{L}[\lambda x.t]~v \rightarrow \mathcal{L}[t[x/v]]}{x\in fv(t)}
 &\infer[DBGC]{\mathcal{L}[\lambda x.t]~v \rightarrow \mathcal{L}[t]}{x\notin fv(t)}
 \end{align*}
-    \caption{Règles de réduction du WCBVLSC}
+    \caption{Règles de réduction du LS(G)C}
 \end{figure}
 \paragraph{Explications.}
 Les règles $RA$ et $LA$ sont la base de l'appel par valeur. Nous commençons par évaluer le terme de gauche d'une application jusqu'à obtenir une abstraction avec ou sans environnement, puis on évalue le terme de droite jusqu'à obtenir une valeur. Ensuite, les règles $DB$ et $DBGC$ interviennent. Leur rôle est d'effectuer l'application et de ne garder la substitution explicite que si elle est utile ($DBGC$ étant la composition de $\ra_{d\beta}$ et $\ra_{gc}$). Les règles $LS$ et $LSGC$ servent à effectuer une substitution lorsque l'on évalue une variable et à supprimer la substitution explicite si elle devient inutile. Enfin, les règles $GC$ et $US$ vont aller évaluer les termes sous les substitutions explicites et les supprimer si elles deviennent inutiles après l'évaluation du sous terme. Cela permet de propager le \og gc \fg~et de ne garder que les substitutions utiles.
@@ -120,13 +131,7 @@ Nous définissons la mesure d'espace ainsi~:
     |t[x/u]| &= |t|+|u|
 \end{align*}
 L'utilisation d'indices de de Bruijn nous permet de ne pas avoir à stocker les variables des substitutions explicites, ce qui explique leurs coûts. 
-Nous étendons cette définition aux contextes~:
-\begin{align*}
-    |\square|&=0\\
-    |\mcc~t| &= |\mcc| + |t| \\
-    |v~\mcc| &= |v| + |\mcc| \\
-    |\mcc[x/t]| &= |\mcc| + |t|
-\end{align*}
+Nous étendons naturellement cette définition aux contextes.
 \subsection{La machine FLAME}
 FLAME est une machine abstraite qui implante la stratégie d'appel par valeur pour les termes du LSC. Elle utilise trois structures pour effectuer ses transitions~:
 \begin{enumerate}
@@ -134,7 +139,7 @@ FLAME est une machine abstraite qui implante la stratégie d'appel par valeur po
     \item Une entrée qui décrit le terme en train d'être évalué
     \item Une pile de contextes
 \end{enumerate}  
-\subsection{Fonctionnement}
+\subsubsection{Fonctionnement}
 L'évaluation des termes se fait en trois phases~: la décomposition, la réduction et la reconstruction. 
 
 \paragraph{Décomposition.}
@@ -149,15 +154,15 @@ Après avoir effectué une réduction, la machine va reconstruire le terme. Lors
 \paragraph{Relance.}
 Lorsque la machine a fini de reconstruire un terme, si celui-ci est une valeur, elle entre dans l'état 3 et s'arrête complètement. Dans le cas contraire, la machine retourne dans l'état 0 et effectue un nouveau cycle d'évaluation.
 
-\subsection{Mesure d'espace}
+\subsubsection{Mesure d'espace}
 Afin d'effectuer nos analyses sur l'espace pris par notre machine, nous définissons la mesure suivante~:
 \begin{align*}
     |\etat{(v,n), t, \mcc}_e| = |t| + |v| + |n| + |\mcc|
 \end{align*}
 Dans le cas où l'entrée \textbf{arg} de la machine est \textbf{-}, nous prenons comme taille $0$. 
 L'entrée \textbf{état} de la machine ne pouvant être que \textbf{0},\textbf{1},\textbf{2} ou \textbf{3} nous ne comptons pas cette information dans nos calculs.
-\subsection{Simulation du LSC}
-\subsubsection{Propreté du LSC en appel par valeur faible}
+\section{Simulation de LS(G)C}
+\subsection{Propreté du LSC en appel par valeur faible}
 \begin{definition}[Propreté]
   Un terme $t$ est dit propre si $cl(t)$ possède une dérivation.
 \begin{figure}[h!]
@@ -172,47 +177,6 @@ L'entrée \textbf{état} de la machine ne pouvant être que \textbf{0},\textbf{1
 \end{definition}
 Étant donné un terme $t$, si $cl(t)$, cela signifie que le terme ne possède aucune substitution explicite inutile.
 Cela nous assure que nous ne pourrons pas effectuer de réduction $GC$ sur le terme $t$.
-% \begin{lemma}[Préservation des variables libres dans les substitutions]
-%   \label{lemmapresfv}
-%   Soient $\mathcal{C}$ un contexte de d'évaluation, $x$ et $y$ des variables et t un terme.
-%   \[
-%     \text{Si}~y \neq x~\wedge~y\in fv(\mathcal{C}[x])~\text{alors}~y \in fv(\mathcal{C}[t])
-%   \]
-% \end{lemma}
-% \begin{proof}
-% Par induction sur la forme de $\mathcal{C}$
-% \end{proof}
-%
-%
-% \begin{lemma}[Propreté des substitutions]
-%   \label{prls}
-%  Soient $\mathcal{C}$ un contexte d'évaluation, $t$ un terme et $x$ une variable.
-%  \[ \text{Si}~\mathcal{C}\llbracket x \rrbracket~\text{est propre et}~t~\text{est propre, alors}~ \mathcal{C}[t]~\text{est propre}\]
-% \end{lemma}
-% \begin{proof}
-%   Par induction sur la forme de $\mathcal{C}$.
-% \end{proof}
-% \begin{lemma}
-%   \label{lemma0}
-%   Soient $\mathcal{L}$ un contexte de substitution, $t$ un terme et $x$ une variable.
-%   \[ 
-%     \text{Si}~x \in fv(\mathcal{L}[\lambda y.t])~\text{, alors}~x \in fv(\mathcal{L}[t])
-%   \]
-% \end{lemma}
-% \begin{proof}
-%   Par induction sur la forme de $\mathcal{L}$.
-% \end{proof}
-%
-% \begin{lemma}[Propreté des applications nettoyante]
-%   \label{prdbgc}
-%   Soient $\mathcal{L}$ un contexte de substitution et $t$ un terme.
-%  \[
-%    \text{Si}~\mathcal{L}[\lambda x.t]~\text{est propre, alors}~\mathcal{L}[t]~\text{est propre}
-%  \]
-% \end{lemma}
-% \begin{proof}
-%   Par induction sur la forme de $\mathcal{L}$.
-% \end{proof}
 
 \begin{theorem}[Préservation de la propreté]
   Soient $t_0$ et $t_1$ des termes. 
@@ -226,7 +190,7 @@ Cela nous assure que nous ne pourrons pas effectuer de réduction $GC$ sur le te
 
 Ce théorème nous assure donc que nos règles de calculs ne produisent aucun terme avec des substitutions explicites pouvant être nettoyées.
 
-\subsubsection{Comportement de FLAME}
+\subsection{Comportement de FLAME}
 \begin{lemma}[Décomposition]
   \label{lemmaplouf}
   Soient $\mathcal{C}$, $\mathcal{D}$ des contextes d'évaluation et $t$ un terme.
@@ -255,7 +219,7 @@ en utilisant un espace $|\mcc|+|t|+|\mcd|$
 \begin{proof}
   Par induction sur la forme de $\mathcal{C}$.
 \end{proof}
-\subsubsection{Simulation raisonnable du LSC par FLAME}
+\subsection{Simulation raisonnable de LS(G)C par FLAME}
 \begin{lemma}[Simulation raisonnable d'un pas]
   Soient $t$ et $u$ des termes propres et $\mcd$ un contexte d'évaluation.
   Il existe une constante $k$ strictement positive telle que
@@ -268,9 +232,15 @@ en utilisant un espace $|\mcc|+|t|+|\mcd|$
   Par induction sur la dérivation de $t\rightarrow u$.
 \end{proof}
 
+\begin{corollary}
+  Soient $t$ et $u$ des termes. Il existe une constante $k$ strictement positive telle que
+  \begin{center}
+    Si $t \ra^* u$ avec $u$ une valeur en espace $S$, alors\\
+    $\etatz{-,t,\square} \rsa^* \etatt{-,u,\square}$ avec un espace $k\times S$
+  \end{center}
+\end{corollary}
 
-
-\subsection{Simulation de FLAME}
+\section{Simulation de FLAME}
 Montrons maintenant que FLAME peut être simulée par des machines de Turing avec un surcoût en espace linéaire.
 Pour ce faire, il nous faut trois choses~:
 \begin{enumerate}
@@ -295,7 +265,7 @@ Par la suite, nous noterons $\bar{t}$ l'encodage du terme $t$.
 \paragraph{Choix du modèle de calcul.}
 Pour représenter les différentes entrées de la machine, nous allons utiliser une machine à quatre rubans. Pour les arguments, nous écrivons l'encodage du terme suivi par le nombre $n$ (la \og distance à l'abstraction) sur le premier ruban. Les termes sont décrits par leur encodage sur le deuxième ruban. Nous sauvegardons les contextes sur me troisième ruban où nous écrivons les encodages des sous-termes précédés par des symboles qui permettent de différencier les types de contexte (LS, RA et LA dans FLAME). Sur le dernier ruban, nous gardons en mémoire l'état de la machine et écrivons les résultats des fonctions \textbf{isFree} et \textbf{isValue}.
 Ce choix de modèle fonctionne, car les machines de Turing à plusieurs rubans peuvent être simulées par des machines à un ruban avec un espace linéaire (Théorème 1 des travaux de van Emde Boas \cite{van1987machine}). 
-\subsubsection{Fonctions internes de FLAME}
+\subsection{Fonctions internes de FLAME}
 
 Maintenant, voyons comment effectuer les différentes opérations que fait la machine sur notre encodage.
 Pour plus de clarté, nous allons étudier des programmes qui calculent ces fonctions.
@@ -312,16 +282,17 @@ La sauvegarde de l'encodage se fait en espace linéaire en la longueur de l'enco
 La taille du nombre de lieurs est quant à elle logarithmique en la longueur de l'encodage.
 La fonction s'exécute ainsi dans un espace linéaire en la longueur de l'encodage.
 \paragraph{red.}
-
 Pour des raisons similaires à celles données pour la fonction lift, le programme en figure \ref{fig:red} calcule la réduction des indices de de Bruijn libre dans un encodage avec un espace linéaire.\\\\
-Pour toutes les raisons énoncées, nous conjecturons que la proposition suivante est vraie.
-\begin{proposition}
+
+Nous justifions donc le théorème suivant~:
+\begin{theorem}
   Il existe une machine de Turing $\mathcal{M}$ et une constante $k$ telles que si $\etatz{-, t, \square} \rsa^* \etatt{-, u, \square}$ avec un espace $S$, alors
   $\mathcal{M}~\bar{t} \ra^*~\bar{u}$ avec un espace $k\times S$. 
-\end{proposition}
-%\subsection{Simulation du $\lambda$-calcul} 
-\section{Revue de la littérature}
+\end{theorem}
+\section{Implémentation}
+
 \section{Conclusion et perspectives}
+
 \section{Remerciements}
 Je tiens à remercier très chaleureusement Thibaut pour avoir encadré ce stage ainsi que pour toute l'aide qu'il m'a apporté. 
 Je tiens également à remercier Travis pour son aide durant ce stage. Enfin, je tiens à remercier l'équipe du LMF qui s'est montrée chaleureuse et très accueillante.
