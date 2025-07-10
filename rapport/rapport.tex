@@ -87,6 +87,10 @@ D'une part, il nous faut définir une mesure d'espace pour le LSC et fixer une s
 D'autre part, il faut montrer que le LSC muni de la stratégie et de la mesure peut être simulé par les machines de Turing et inversement avec un surcoût d'espace linéaire. Une autre difficulté se présentant est la possibilité de capturer les classes de complexité sous-linéaires, en particulier LOG-SPACE.
 Afin de pouvoir caractériser cette classe de complexité, les machines de Turing distinguent un ruban d'entrée qu'elles ne comptent pas comme de l'espace utilisé et ne comptent que l'espace de travail. Ce procédé est beaucoup moins naturel sur les $\lambda$-termes, car ils représentent à la fois le~\og programme~\fg, les~\og  données d'entrée~\fg~et les~\og calculs~\fg~en cours. 
 \paragraph{Travaux connexes.}
+  Dans leurs travaux, \cite{forster2019weak}, Forster et al. montrent que le $\lambda$-calcul en appel par valeur est raisonnable pour l'espace (et le temps).
+  Cependant, leur mesure ne permet pas de capturer les classes sous-linéaires.
+  Accattoli, Dal Lago et Vanoni décrivent une manière de capturer ces classes dans leur travaux~\cite{accattoli2022reasonable}. 
+  Néamoins, leur mesures se basent sur une machine abstraite et non pas sur les $\lambda$-termes.
 
 \section{Formalismes}
 \subsection{LS(G)C}
@@ -133,12 +137,15 @@ Nous définissons la mesure d'espace ainsi~:
 L'utilisation d'indices de de Bruijn nous permet de ne pas avoir à stocker les variables des substitutions explicites, ce qui explique leurs coûts. 
 Nous étendons naturellement cette définition aux contextes.
 \subsection{La machine FLAME}
-FLAME est une machine abstraite qui implante la stratégie d'appel par valeur pour les termes du LSC. Elle utilise trois structures pour effectuer ses transitions~:
+FLAME est une machine abstraite qui implante la stratégie d'appel par valeur pour les termes du LSC. 
+Un état de FLAME se décrit par un triplet annoté de la forme $\etat{(v,n),t,\mcc}_e$ où~:
 \begin{enumerate}
-    \item Une section qui stocke possiblement l'argument d'une application et sa \og distance\fg~par rapport à l'abstraction.
-    \item Une entrée qui décrit le terme en train d'être évalué
-    \item Une pile de contextes
-\end{enumerate}  
+  \item $t$ représente le terme en train d'être évaluer.
+  \item $\mcc$ est une pile de contexte d'évaluation.
+    \item $(v, n)$ contient optionellement l'argument d'une application et sa \og distance\fg~par rapport à l'abstraction.
+    \item $e$ est un nombre qui indique la phase de fonctionnement de FLAME.
+\end{enumerate} 
+Toutes les transitions de FLAME sont décrites dans la figure~\ref{FLAME} en annexe.
 \subsubsection{Fonctionnement}
 L'évaluation des termes se fait en trois phases~: la décomposition, la réduction et la reconstruction. 
 
@@ -162,7 +169,7 @@ Afin d'effectuer nos analyses sur l'espace pris par notre machine, nous définis
 Dans le cas où l'entrée \textbf{arg} de la machine est \textbf{-}, nous prenons comme taille $0$. 
 L'entrée \textbf{état} de la machine ne pouvant être que \textbf{0},\textbf{1},\textbf{2} ou \textbf{3} nous ne comptons pas cette information dans nos calculs.
 \section{Simulation de LS(G)C}
-\subsection{Propreté du LSC en appel par valeur faible}
+\subsection{Propreté de LS(G)C}
 \begin{definition}[Propreté]
   Un terme $t$ est dit propre si $cl(t)$ possède une dérivation.
 \begin{figure}[h!]
@@ -284,7 +291,7 @@ La fonction s'exécute ainsi dans un espace linéaire en la longueur de l'encoda
 \paragraph{red.}
 Pour des raisons similaires à celles données pour la fonction lift, le programme en figure \ref{fig:red} calcule la réduction des indices de de Bruijn libre dans un encodage avec un espace linéaire.\\\\
 
-Nous justifions donc le théorème suivant~:
+Les descriptions ci-dessus permettent donc de justifier l'existance d'une machine de Turing simulant FLAME avec un surcoût d'espace linéaire.
 \begin{theorem}
   Il existe une machine de Turing $\mathcal{M}$ et une constante $k$ telles que si $\etatz{-, t, \square} \rsa^* \etatt{-, u, \square}$ avec un espace $S$, alors
   $\mathcal{M}~\bar{t} \ra^*~\bar{u}$ avec un espace $k\times S$. 
