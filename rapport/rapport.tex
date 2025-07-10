@@ -1,6 +1,7 @@
 
-\documentclass{article}
+\documentclass[a4paper, 11pt]{article}
 \usepackage[french]{babel} \frenchbsetup{og=«,fg=»}
+\usepackage{fullpage}
 \usepackage{graphicx}
 \usepackage[T1]{fontenc}
 \usepackage[utf8]{inputenc}
@@ -25,9 +26,10 @@
 
 \theoremstyle{definition}
 \newtheorem{definition}{Définition}[section]
-\newtheorem{theorem}{Théorem}[section]
+\newtheorem{theorem}{Théorème}[section]
 \newtheorem{lemma}[theorem]{Lemme}
 \newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollaire}
 
 \newcommand{\etat}[1]{\langle #1 \rangle}
 \newcommand{\etatz}[1]{\langle #1 \rangle_0}
@@ -35,6 +37,7 @@
 \newcommand{\etatd}[1]{\langle #1 \rangle_2}
 \newcommand{\etatt}[1]{\langle #1 \rangle_3}
 \newcommand{\mcc}{\mathcal{C}}
+\newcommand{\mcd}{\mathcal{D}}
 \newcommand{\mcl}{\mathcal{L}}
 \newcommand{\mce}{\mathcal{E}}
 \newcommand{\llb}{\llbracket}
@@ -49,14 +52,12 @@
 \begin{document}
 \maketitle
 \begin{abstract}
-Dans ce travail, nous définissons une mesure d'espace pour le LSC. Nous adaptons ensuite la stratégie d'appel par valeur au LSC. Enfin, nous montrons que cette stratégie munie de la mesure définie constitue un modèle de calcul raisonnable pour l'espace.
+Dans ce travail, nous définissons une mesure d'espace pour le LSC. 
+Nous adaptons ensuite la stratégie d'appel par valeur au LSC. 
+Enfin, nous montrons que cette stratégie munie de la mesure définie constitue un modèle de calcul raisonnable pour l'espace en passant par une machine abstraite.
 \end{abstract}
 \section{Introduction}
-\section{Contexte et problème étudié}
-%\paragraph{La complexité spatiale.}
 \paragraph{L'invariance des modèles.} Énoncée par Peter van Emde Boas et Cees Slot~\cite{slot1988problem}, cette thèse affirme qu'il existe une classe de modèles de calcul, et que tous les modèles au sein de cette classe peuvent se simuler entre eux avec un surcoût polynomial en temps et linéaire en espace. En particulier, cette classe contiendrait les machines de Turing, les RAM, etc.  
-%\paragraph{Le $\lambda$-calcul.}
-%Le $\lambda$-calcul est un modèle de calcul introduit par Alonzo Church dans les années 30.
 \paragraph{Le Linear Substitution Calculus.}
 Le LSC est une variante du $\lambda$-calcul introduite par Accattoli et co-auteurs~\cite{accattoli2014nonstandard}.
 Les termes sont donnés par la grammaire suivante~:
@@ -136,17 +137,17 @@ FLAME est une machine abstraite qui implante la stratégie d'appel par valeur po
 \subsection{Fonctionnement}
 L'évaluation des termes se fait en trois phases~: la décomposition, la réduction et la reconstruction. 
 
-\paragraph{Décompostion.}
+\paragraph{Décomposition.}
 Dans le premier temps, la machine décompose les termes jusqu'à trouver une réduction possible (substitution ou $\beta$-réduction). La machine sépare les applications en évaluant un des membres et stocke l'autre sur sa pile de contextes. De même, elle stocke sur sa pile les substitutions et évalue leur sous terme gauche (si elle ne fait pas partie d'une valeur). Cette phase d'exploration est réalisée par les transition dont l'état de départ est 0. 
 
 \paragraph{Réduction.}
-Lorsque la machine à trouvé une réduction, elle va effectuer une transition $\rsa_{db}$ et rentrer dans l'état 1 si c'est une $\beta$-réduction, ou effectuer une transition $\rsa_{ls}$ et entrer dans l'état 2 si c'est une substitution. La machine se sert de l'état 1 pour réaliser une réduction du genre $d\beta$, il est utilisé pour calculer le décalage des indices de de Bruijn et mettre la nouvelle substitution sous les potentielles substitutions déja présentes. La machine entre ensuite dans l'état 2.
+Lorsque la machine a trouvé une réduction, elle va effectuer une transition $\rsa_{db}$ et rentrer dans l'état 1 si c'est une $\beta$-réduction, ou effectuer une transition $\rsa_{ls}$ et entrer dans l'état 2 si c'est une substitution. La machine se sert de l'état 1 pour réaliser une réduction du genre $d\beta$, il est utilisé pour calculer le décalage des indices de de Bruijn et mettre la nouvelle substitution sous les potentielles substitutions déja présentes. La machine entre ensuite dans l'état 2.
 
 \paragraph{Reconstruction.}
-Après avoir effectuer une réduction, la machines va reconstruire le terme. Lors de cette phase, elle récupère les sous termes de sa pile de contexte et reconstruit le terme. Lorsqu'elle trouve une substitutions dans sa pile de contexte, elle vérifie que la substituions est bien liée dans son terme. Si ce n'est pas le cas elle supprime cette substitution lors de la transition $\rsa_{gc}$. Dans le cas contraire, elle replace simplement la substitution sur son terme courant.
+Après avoir effectué une réduction, la machine va reconstruire le terme. Lors de cette phase, elle récupère les sous termes de sa pile de contexte et reconstruit le terme. Lorsqu'elle trouve une substitutions dans sa pile de contexte, elle vérifie que la substituions est bien liée dans son terme. Si ce n'est pas le cas elle supprime cette substitution lors de la transition $\rsa_{gc}$. Dans le cas contraire, elle replace simplement la substitution sur son terme courant.
 
-\paragraph{Relancement.}
-Lorsque la machine à fini de reconstruire un terme, si celui-ci est une valeur, elle entre dans l'état 3 et s'arrête complètement. Dans le cas contraire, la machine retourne dans l'état 0 et effectue un nouveau cycle d'évaluation.
+\paragraph{Relance.}
+Lorsque la machine a fini de reconstruire un terme, si celui-ci est une valeur, elle entre dans l'état 3 et s'arrête complètement. Dans le cas contraire, la machine retourne dans l'état 0 et effectue un nouveau cycle d'évaluation.
 
 \subsection{Mesure d'espace}
 Afin d'effectuer nos analyses sur l'espace pris par notre machine, nous définissons la mesure suivante~:
@@ -156,35 +157,209 @@ Afin d'effectuer nos analyses sur l'espace pris par notre machine, nous définis
 Dans le cas où l'entrée \textbf{arg} de la machine est \textbf{-}, nous prenons comme taille $0$. 
 L'entrée \textbf{état} de la machine ne pouvant être que \textbf{0},\textbf{1},\textbf{2} ou \textbf{3} nous ne comptons pas cette information dans nos calculs.
 \subsection{Simulation du LSC}
+\subsubsection{Propreté du LSC en appel par valeur faible}
+\begin{definition}[Propreté]
+  Un terme $t$ est dit propre si $cl(t)$ possède une dérivation.
+\begin{figure}[h!]
+  \begin{align*} 
+    &\infer{cl(x)}{}
+ &\infer{cl(\lambda x.t)}{cl(t)}\\
+ &\infer{cl(t~u)}{cl(t) & cl(u) }
+&\infer{cl(t[x/u])}{cl(t)&cl(u)&x\in fv(t)}
+  \end{align*}
+  \caption{Règles de dérivation de la propreté.}\label{fig:clean}
+\end{figure}
+\end{definition}
+Étant donné un terme $t$, si $cl(t)$, cela signifie que le terme ne possède aucune substitution explicite inutile.
+Cela nous assure que nous ne pourrons pas effectuer de réduction $GC$ sur le terme $t$.
+% \begin{lemma}[Préservation des variables libres dans les substitutions]
+%   \label{lemmapresfv}
+%   Soient $\mathcal{C}$ un contexte de d'évaluation, $x$ et $y$ des variables et t un terme.
+%   \[
+%     \text{Si}~y \neq x~\wedge~y\in fv(\mathcal{C}[x])~\text{alors}~y \in fv(\mathcal{C}[t])
+%   \]
+% \end{lemma}
+% \begin{proof}
+% Par induction sur la forme de $\mathcal{C}$
+% \end{proof}
+%
+%
+% \begin{lemma}[Propreté des substitutions]
+%   \label{prls}
+%  Soient $\mathcal{C}$ un contexte d'évaluation, $t$ un terme et $x$ une variable.
+%  \[ \text{Si}~\mathcal{C}\llbracket x \rrbracket~\text{est propre et}~t~\text{est propre, alors}~ \mathcal{C}[t]~\text{est propre}\]
+% \end{lemma}
+% \begin{proof}
+%   Par induction sur la forme de $\mathcal{C}$.
+% \end{proof}
+% \begin{lemma}
+%   \label{lemma0}
+%   Soient $\mathcal{L}$ un contexte de substitution, $t$ un terme et $x$ une variable.
+%   \[ 
+%     \text{Si}~x \in fv(\mathcal{L}[\lambda y.t])~\text{, alors}~x \in fv(\mathcal{L}[t])
+%   \]
+% \end{lemma}
+% \begin{proof}
+%   Par induction sur la forme de $\mathcal{L}$.
+% \end{proof}
+%
+% \begin{lemma}[Propreté des applications nettoyante]
+%   \label{prdbgc}
+%   Soient $\mathcal{L}$ un contexte de substitution et $t$ un terme.
+%  \[
+%    \text{Si}~\mathcal{L}[\lambda x.t]~\text{est propre, alors}~\mathcal{L}[t]~\text{est propre}
+%  \]
+% \end{lemma}
+% \begin{proof}
+%   Par induction sur la forme de $\mathcal{L}$.
+% \end{proof}
+
+\begin{theorem}[Préservation de la propreté]
+  Soient $t_0$ et $t_1$ des termes. 
+  \[
+    t_0~\text{propre}~\wedge~t_0\rightarrow~t_1~\Rightarrow~t_1~\text{propre}
+  \]
+\end{theorem}
+\begin{proof}
+  Par induction sur la dérivation de $t_0 \rightarrow t_1$.
+\end{proof}
+
+Ce théorème nous assure donc que nos règles de calculs ne produisent aucun terme avec des substitutions explicites pouvant être nettoyées.
+
+\subsubsection{Comportement de FLAME}
+\begin{lemma}[Décomposition]
+  \label{lemmaplouf}
+  Soient $\mathcal{C}$, $\mathcal{D}$ des contextes d'évaluation et $t$ un terme.
+\[\langle -,\mathcal{C}[t], \mathcal{D}\rangle_0 \rightsquigarrow^* \langle -,t,\mathcal{C} :: \mathcal{D}\rangle_0\]
+en utilisant un espace $|\mcc|+|t|+|\mcd|$
+\end{lemma}
+\begin{proof}
+  Par induction sur la forme de $\mathcal{C}$.
+\end{proof}
+
+\begin{lemma}[Plongeon sous les substitutions]
+  \label{lemmaplouf2}
+  Soient $\mathcal{D}$ un contexte d'évaluation, $\mcl$ un contexte de substitution et $t$, $u$ des termes.
+  \[ \etatu{u, \mcl[t], \mcd} \rightsquigarrow_{rdb}^* \etatu{u, t, \mcl::\mcd} \]
+en utilisant un espace $|\mcd|+|t|+|\mcl|+|u|$
+\end{lemma}
+\begin{proof}
+  Par induction sur la forme de $\mathcal{L}$.
+\end{proof}
+\begin{lemma}[Reconstruction]
+  \label{lemmaportugal}
+  Soient $\mathcal{C}$ et $\mathcal{D}$ des contextes d'évaluation et $t$ un terme.
+  \[\mathcal{C}[t]~\text{propre}~\Rightarrow \langle-,t,\mathcal{C}::\mathcal{D}\rangle_2 \rightsquigarrow^* \langle-,\mathcal{C}[t],\mathcal{D}\rangle_2\]
+en utilisant un espace $|\mcc|+|t|+|\mcd|$
+\end{lemma}
+\begin{proof}
+  Par induction sur la forme de $\mathcal{C}$.
+\end{proof}
+\subsubsection{Simulation raisonnable du LSC par FLAME}
+\begin{lemma}[Simulation raisonnable d'un pas]
+  Soient $t$ et $u$ des termes propres et $\mcd$ un contexte d'évaluation.
+  Il existe une constante $k$ strictement positive telle que
+  \begin{center}  
+    $\text{Si}~t \rightarrow u~\text{avec un espace}~S\text{, alors}$\\  
+  $\etat{-,t,\mcd}_0 \rightsquigarrow^* \etat{-,u,\mcd}_2~\text{avec un espace}~k\times S+|\mcd|$
+  \end{center}
+\end{lemma}
+\begin{proof}
+  Par induction sur la dérivation de $t\rightarrow u$.
+\end{proof}
+
+
+
 \subsection{Simulation de FLAME}
 Montrons maintenant que FLAME peut être simulée par des machines de Turing avec un surcoût en espace linéaire.
 Pour ce faire, il nous faut trois choses~:
 \begin{enumerate}
     \item Un encodage des termes ayant un surcoût d'espace linéaire par rapport à la taille de nos termes.
-    \item Des structures de données pour les différentes entrées de la machine.
+    \item Une représentation des différentes entrées de la machine.
     \item Des fonctions \textbf{red}, \textbf{lift}, \textbf{isFree} et \textbf{isValue}. Ces fonctions vont respectivement réduire ou augmenter les indices de de Bruijn dans un terme encodé, vérifier qu'une variable est libre dans un terme encodé et vérifier qu'un terme encodé est une valeur.
     De nouveau, ces fonctions doivent se faire avec un coût spatial au plus linéaire.
 \end{enumerate}
 
-\paragraph{Encodage} L'encodage des termes se fait via une fonction récursive définie ainsi~:
+\paragraph{Encodage.} L'encodage des termes se fait via une fonction récursive définie ainsi~:
 \begin{align*}
     \mce(x) &=x\\
     \mce(\lambda .t) &=\lambda \mce(t) A\\
     \mce(t~u)&=(\mce(t)\text{\textvisiblespace}\mce(u))\\
     \mce(t[v])&=S\mce(t)[\mce(v)]
 \end{align*}
-Nous partons du principe que les termes avant encodage sont sous la forme indice de de Bruijn et les variables sont écrit en base 2. Nous avons ajouté un symbole $A$ pour délimiter la fin d'une abstraction et un symbole $S$ pour définir le début d'une substitution explicite. Enfin, nous ajoutonsl des parenthèse et un symbole d'espace aux applications pour délimiter chaque membres. Il est direct que notre encodage à une taille linéaire en la taille du terme non encodé.
+Nous partons du principe que les termes avant encodage sont sous la forme indice de de Bruijn et les variables sont écrit en base 2. 
+Nous avons ajouté un symbole $A$ pour délimiter la fin d'une abstraction et un symbole $S$ pour définir le début d'une substitution explicite. 
+Enfin, nous ajoutons des parenthèses et un symbole d'espace aux applications pour délimiter chaque membre.
+Il est direct que notre encodage à une taille linéaire en la taille du terme non encodé.
 Par la suite, nous noterons $\bar{t}$ l'encodage du terme $t$.
 \paragraph{Choix du modèle de calcul.}
 Pour représenter les différentes entrées de la machine, nous allons utiliser une machine à quatre rubans. Pour les arguments, nous écrivons l'encodage du terme suivi par le nombre $n$ (la \og distance à l'abstraction) sur le premier ruban. Les termes sont décrits par leur encodage sur le deuxième ruban. Nous sauvegardons les contextes sur me troisième ruban où nous écrivons les encodages des sous-termes précédés par des symboles qui permettent de différencier les types de contexte (LS, RA et LA dans FLAME). Sur le dernier ruban, nous gardons en mémoire l'état de la machine et écrivons les résultats des fonctions \textbf{isFree} et \textbf{isValue}.
 Ce choix de modèle fonctionne, car les machines de Turing à plusieurs rubans peuvent être simulées par des machines à un ruban avec un espace linéaire (Théorème 1 des travaux de van Emde Boas \cite{van1987machine}). 
-\subsubsection{Fonctions de gestion}
+\subsubsection{Fonctions internes de FLAME}
 
 Maintenant, voyons comment effectuer les différentes opérations que fait la machine sur notre encodage.
 Pour plus de clarté, nous allons étudier des programmes qui calculent ces fonctions.
 
 \paragraph{isValue.} Il suffit de parcourir l'encodage de gauche à droite. Si nous rencontrons sur le symbole $S$, nous continuons. Si le symbole rencontré est $\lambda$ renvoyer $vrai$, sinon renvoyer $faux$. Tout cela se fait en espace constant.
 \paragraph{isFree.} Le programme en figure \ref{fig:isFree} permet de décider si une variable est libre dans l'encodage d'un terme.
+L'algorithme n'accède à l'encodage qu'en lecture et le parcours une unique fois de gauche à droite. Ainsi, celui-ci n'a besoin de garder en mémoire que le nombre de lieurs rencontrés.
+Le programme s'exécute donc avec un espace logarithmique en la longueur de l'encodage.
+\paragraph{lift.}
+
+Le programme en figure~\ref{fig:lift} permet de calculer l'augmentation des indices de de Bruijn dans un terme encodé.
+Pour ce faire, la fonction garde en mémoire l'encodage en augmentant certains indices et change également le nombre de lieurs rencontrés. 
+La sauvegarde de l'encodage se fait en espace linéaire en la longueur de l'encodage. 
+La taille du nombre de lieurs est quant à elle logarithmique en la longueur de l'encodage.
+La fonction s'exécute ainsi dans un espace linéaire en la longueur de l'encodage.
+\paragraph{red.}
+
+Pour des raisons similaires à celles données pour la fonction lift, le programme en figure \ref{fig:red} calcule la réduction des indices de de Bruijn libre dans un encodage avec un espace linéaire.\\\\
+Pour toutes les raisons énoncées, nous conjecturons que la proposition suivante est vraie.
+\begin{proposition}
+  Il existe une machine de Turing $\mathcal{M}$ et une constante $k$ telles que si $\etatz{-, t, \square} \rsa^* \etatt{-, u, \square}$ avec un espace $S$, alors
+  $\mathcal{M}~\bar{t} \ra^*~\bar{u}$ avec un espace $k\times S$. 
+\end{proposition}
+%\subsection{Simulation du $\lambda$-calcul} 
+\section{Revue de la littérature}
+\section{Conclusion et perspectives}
+\section{Remerciements}
+Je tiens à remercier très chaleureusement Thibaut pour avoir encadré ce stage ainsi que pour toute l'aide qu'il m'a apporté. 
+Je tiens également à remercier Travis pour son aide durant ce stage. Enfin, je tiens à remercier l'équipe du LMF qui s'est montrée chaleureuse et très accueillante.
+\bibliographystyle{abbrv}
+\bibliography{main}
+\section*{Annexe}
+\begin{figure}[h]
+\label{FLAME}
+\centering
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{@{}l l l l l l l l l l@{}}
+\toprule
+\textbf{arg} & \textbf{terme} & \textbf{contexte} & \textbf{état} & \textbf{transition}& \textbf{arg} & \textbf{terme} & \textbf{contexte} & \textbf{état} \\
+\midrule
+
+– & $t[ u ] $ & $\mcc$ & 0 & $\rsa_{us}$ & – & $t$ & $\textsf{LS}(u) :: \mcc$ & 0  \\
+
+- & $t~u$ & $\mcc$ & 0 & $\rsa_{lapp}$ & – & $t$ & $\textsf{RA}(u) ::\mcc$ & 0  \\
+- & $v~t$ & $\mcc$ & 0 & $\rsa_{rapp}$ & – & $t$ & $\textsf{LA}(v) :: \mcc$ & 0  \\
+- & $n$  & $\mcc$ & 0 & $\rsa_{ls}$ & - & $\uparrow^{n+1} t$ & $\mcc$ & 2 & $\textsf{LS}(t)=\textsf{nth\_subst}(\mcc)$ \\
+- & $v_1~v_2$  & $\mcc$ & 0 & $\rsa_{db}$ & $(v_2,0)$ & $v_1$ & $\mcc$ & 1  \\
+
+$(v_2, n)$ & $v_1[ t ]$ &$\mcc$ & 1 & $\rsa_{rdb}$ & $(v_2, n+1)$ & $v_1$ & $\textsf{LS}(t) :: \mcc$ & 1\\ 
+$(v, n)$ & $\lambda.t $ &$\mcc$ & 1 & $\rsa_{fdb}$ & - & $t$ & $\textsf{LS}(\uparrow^{n}v) :: \mcc$ & 2 & $0\in fv(t)$\\
+$(v, n)$ & $\lambda.t $ &$\mcc$ & 1 & $\rsa_{fdbgc}$ & - & $\downarrow t$ & $\mcc$ & 2& $0\notin fv(t)$\\
+-&$v$ & $[]$ & 2 & $\rsa_{stop}$ & -& $v$ &$[]$ & 3 \\
+-&$t$ & $[]$ & 2 & $\rsa_{dive}$ & -& $t$ &$[]$ & 0 \\
+-&$t$ & $\textsf{LS}(u) :: \mcc$ & 2 & $\rsa_{gc}$ & -& $\downarrow t$ &$\mcc$ & 2 & $0\notin \textsf{fv}(t)$ \\
+-&$t$ & $\textsf{LS}(u) :: \mcc$ & 2 & $\rsa_{bsubst}$ & -& $t[ u ]$ &$\mcc$ & 2 & $0\in \textsf{fv}(t)$ \\
+-&$t$ & $\textsf{RA}(u) :: \mcc$ & 2 & $\rsa_{blapp}$ & -& $t~u$ &$\mcc$ & 2 \\
+-&$t$ & $\textsf{LA}(u) :: \mcc$ & 2 & $\rsa_{brapp}$ & -& $u~t$ &$\mcc$ & 2 \\
+
+\bottomrule
+\end{tabular}
+}
+\caption{Transitions de FLAME.}
+\end{figure}
+
 \begin{figure}[h]
   \begin{center}    
 \begin{lstlisting}
@@ -204,9 +379,7 @@ let rec free (n : int) (e : encoding) : bool =
   \end{center}
   \caption{Programme OCaml décidant si une variable est libre.}\label{fig:isFree}
 \end{figure}
-L'algorithme n'accède à l'encodage qu'en lecture et le parcours une unique fois de gauche à droite. Ainsi, celui-ci n'a besoin de garder en mémoire que le nombre de lieurs rencontrés.
-Le programme s'exécute donc avec un espace logarithmique en la longueur de l'encodage.
-\paragraph{lift.}
+
 \begin{figure}[h]
   \begin{center}
 \begin{lstlisting}
@@ -229,12 +402,7 @@ let lift_encoding shift e =
   \end{center}
   \caption{Programme OCaml augmentant les indices dans un encodage.}\label{fig:lift}
 \end{figure}
-Le programme en figure~\ref{fig:lift} permet de calculer l'augmentation des indices de de Bruijn dans un terme encodé.
-Pour ce faire, la fonction garde en mémoire l'encodage en augmentant certains indices et change également le nombre de lieurs rencontrés. 
-La sauvegarde de l'encodage se fait en espace linéaire en la longueur de l'encodage. 
-La taille du nombre de lieurs est quant à elle logarithmique en la longueur de l'encodage.
-La fonction s'exécute ainsi dans un espace linéaire en la longueur de l'encodage.
-\paragraph{red.}
+
 \begin{figure}[h]
   \begin{center}
 \begin{lstlisting}
@@ -257,52 +425,4 @@ let red_encoding e =
   \end{center}
   \caption{Programme OCaml réduisant les indices dans un encodage.}\label{fig:red}
 \end{figure}
-Pour des raisons similaires à celles données pour la fonction lift, le programme en figure \ref{fig:red} calcule la réduction des indices de de Bruijn libre dans un encodage avec un espace linéaire.\\\\
-Pour toutes les raisons énoncées, nous conjecturons que la proposition suivante est vraie.
-\begin{proposition}
-  Il existe une machine de Turing $\mathcal{M}$ et une constante $k$ telles que si $\etatz{-, t, \square} \rsa^* \etatt{-, u, \square}$ avec un espace $S$, alors
-  $\mathcal{M}~\bar{t} \ra^*~\bar{u}$ avec un espace $k\times S$. 
-\end{proposition}
-\subsection{Simulation du $\lambda$-calcul} 
-\section{Revue de la littérature}
-\section{Conclusion et perspectives}
-\section{Remerciements}
-Je tiens à remercier très chaleureusement Thibaut pour avoir encadré ce stage ainsi que pour toute l'aide qu'il m'a apporté. 
-Je tiens également à remercier Travis pour son aide durant ce stage. Enfin, je tiens à remercier l'équipe du LMF qui s'est montrée chaleureuse et très accueillante.
-\bibliographystyle{abbrv}
-\bibliography{main}
-\section*{Annexe}
-\begin{figure}[ht]
-\label{FLAME}
-\centering
-\resizebox{\textwidth}{!}{%
-\begin{tabular}{@{}l l l l l l l l l l@{}}
-\toprule
-\textbf{arg} & \textbf{terme} & \textbf{contexte} & \textbf{état} & \textbf{transition}& \textbf{arg} & \textbf{terme} & \textbf{contexte} & \textbf{état} \\
-\midrule
-
-– & $t[ u ] $ & $C$ & 0 & $\rsa_{us}$ & – & $t$ & $\textsf{LS}(u) :: C$ & 0  \\
-
-- & $t~u$ & $C$ & 0 & $\rsa_{lapp}$ & – & $t$ & $\textsf{RA}(u) :: C$ & 0  \\
-- & $v~t$ & $C$ & 0 & $\rsa_{rapp}$ & – & $t$ & $\textsf{LA}(v) :: C$ & 0  \\
-- & $n$  & $C$ & 0 & $\rsa_{ls}$ & - & $\uparrow^{n+1} t$ & $C$ & 2 & $\textsf{LS}(t)=\textsf{nth\_subst}(C)$ \\
-- & $v_1~v_2$  & $C$ & 0 & $\rsa_{db}$ & $(v_2,0)$ & $v_1$ & $C$ & 1  \\
-
-$(v_2, n)$ & $v_1[ t ]$ &$C$ & 1 & $\rsa_{rdb}$ & $(v_2, n+1)$ & $v_1$ & $\textsf{LS}(t) :: C$ & 1\\ 
-$(v, n)$ & $\lambda.t $ &$C$ & 1 & $\rsa_{fdb}$ & - & $t$ & $\textsf{LS}(\uparrow^{n}v) :: C$ & 2\\
-
--&$v$ & $[]$ & 2 & $\rsa_{stop}$ & -& $v$ &$[]$ & 3 \\
--&$t$ & $[]$ & 2 & $\rsa_{dive}$ & -& $t$ &$[]$ & 0 \\
--&$t$ & $\textsf{LS}(u) :: C$ & 2 & $\rsa_{gc}$ & -& $\downarrow t$ &$C$ & 2 & $0\notin \textsf{fv}(t)$ \\
--&$t$ & $\textsf{LS}(u) :: C$ & 2 & $\rsa_{bsubst}$ & -& $t[ u ]$ &$C$ & 2 & $0\in \textsf{fv}(t)$ \\
--&$t$ & $\textsf{RA}(u) :: C$ & 2 & $\rsa_{blapp}$ & -& $t~u$ &$C$ & 2 \\
--&$t$ & $\textsf{LA}(u) :: C$ & 2 & $\rsa_{brapp}$ & -& $u~t$ &$C$ & 2 \\
-
-\bottomrule
-\end{tabular}
-}
-\caption{Transitions de FLAME.}
-\end{figure}
-
-
 \end{document}
