@@ -54,18 +54,18 @@
 \begin{abstract}
 \end{abstract}
 \section{Introduction}
- Énoncée par Peter van Emde Boas et Cees Slot~\cite{slot1988problem}, 
+\paragraph{Thèse d'invariance des modèles.}
+Énoncée par Peter van Emde Boas et Cees Slot~\cite{slot1988problem}, 
  la thèse d'invariance des modèles affirme qu'il existe une classe de modèles de calcul, 
  et que tous les modèles au sein de cette classe peuvent se simuler entre eux avec un surcoût polynomial en temps et linéaire en espace. 
  En particulier, cette classe contiendrait les machines de Turing, les RAM, etc.
-
+\paragraph{Le $\lambda$-calcul et sa complexité.}
  Le $\lambda$-calcul est un modèle de calcul servant de base aux langages de programmation fonctionnels. 
  Il est donc naturel de nous assurer que ce modèle est bien dans cette classe.
  Bien qu'étant naturelle sur les machines de Turing, 
  les notions de temps et d'espace sur les $\lambda$-termes et leurs réductions ne sont pas immédiates.
-
-\paragraph{Le Linear Substitution Calculus.}
-Le LSC est une variante du $\lambda$-calcul introduite par Accattoli et co-auteurs~\cite{accattoli2014nonstandard}.
+\paragraph{Le linear substitution calculus.}
+Le Linear Substitution Calculus est une variante du $\lambda$-calcul introduite par Accattoli et co-auteurs~\cite{accattoli2014nonstandard}.
 Les termes sont donnés par la grammaire suivante~:
 \begin{align*}
     t ::=~x~|~\lambda x.t~|~t~t~|~t[x/t]
@@ -84,13 +84,15 @@ où $\mcc$ et $\mcl$ sont des contextes construits par les grammaires~:
 Nous souhaitons montrer que le LSC est un modèle de calcul raisonnable pour l'espace. 
 Cependant, plusieurs difficultés se présentent. 
 D'une part, il nous faut définir une mesure d'espace pour le LSC et fixer une stratégie de réduction. 
-D'autre part, il faut montrer que le LSC muni de la stratégie et de la mesure peut être simulé par les machines de Turing et inversement avec un surcoût d'espace linéaire. Une autre difficulté se présentant est la possibilité de capturer les classes de complexité sous-linéaires, en particulier LOG-SPACE.
-Afin de pouvoir caractériser cette classe de complexité, les machines de Turing distinguent un ruban d'entrée qu'elles ne comptent pas comme de l'espace utilisé et ne comptent que l'espace de travail. Ce procédé est beaucoup moins naturel sur les $\lambda$-termes, car ils représentent à la fois le~\og programme~\fg, les~\og  données d'entrée~\fg~et les~\og calculs~\fg~en cours. 
+D'autre part, il faut montrer que le LSC muni de la stratégie et de la mesure peut être simulé par les machines de Turing et inversement avec un surcoût d'espace linéaire. 
+% Une autre difficulté se présentant est la possibilité de capturer les classes de complexité sous-linéaires, en particulier LOG-SPACE.
+% Afin de pouvoir caractériser cette classe de complexité, les machines de Turing distinguent un ruban d'entrée qu'elles ne comptent pas comme de l'espace utilisé et ne comptent que l'espace de travail. 
+%Ce procédé est beaucoup moins naturel sur les $\lambda$-termes, car ils représentent à la fois le~\og programme~\fg, les~\og  données d'entrée~\fg~et les~\og calculs~\fg~en cours. 
 \paragraph{Travaux connexes.}
   Dans leurs travaux, \cite{forster2019weak}, Forster et al. montrent que le $\lambda$-calcul en appel par valeur est raisonnable pour l'espace (et le temps).
   Cependant, leur mesure ne permet pas de capturer les classes sous-linéaires.
-  Accattoli, Dal Lago et Vanoni décrivent une manière de capturer ces classes dans leur travaux~\cite{accattoli2022reasonable}. 
-  Néamoins, leur mesures se basent sur une machine abstraite et non pas sur les $\lambda$-termes.
+  Accattoli, Dal Lago et Vanoni décrivent une manière de capturer ces classes dans leurs travaux~\cite{accattoli2022reasonable}. 
+  Néanmoins, leurs mesures se basent sur une machine abstraite et non pas sur les $\lambda$-termes.
 
 \section{Formalismes}
 \subsection{LS(G)C}
@@ -100,7 +102,7 @@ Ceux-ci sont donnés par la grammaire~:
 \[v ::= \lambda x.t~|~v[x/t]\]
 Les valeurs sont donc les abstractions munies d'une \og liste\fg~de substitutions. Nous distinguons clairement ici le concept de fermeture.
 De plus, nous restreignons les contextes que nous utiliserons dans nos réductions à ceux donnés par la grammaire : 
-\[\mcc ::= \square~|~\mcc[x/t]~|~\mcc~t~|~t~\mcc\]
+\[\mcc ::= \square~|~\mcc[x/t]~|~\mcc~t~|~v~\mcc\]
 Nous remarquons que l'on ne permet plus la substitution sous les abstractions ni dans les substitutions explicites.
 Notre stratégie est donc définie ainsi~:
 \begin{figure}[!h]
@@ -137,6 +139,7 @@ Nous définissons la mesure d'espace ainsi~:
 L'utilisation d'indices de de Bruijn nous permet de ne pas avoir à stocker les variables des substitutions explicites, ce qui explique leurs coûts. 
 Nous étendons naturellement cette définition aux contextes.
 \subsection{La machine FLAME}
+
 FLAME est une machine abstraite qui implante la stratégie d'appel par valeur pour les termes du LSC. 
 Un état de FLAME se décrit par un triplet annoté de la forme $\etat{(v,n),t,\mcc}_e$ où~:
 \begin{enumerate}
@@ -147,19 +150,44 @@ Un état de FLAME se décrit par un triplet annoté de la forme $\etat{(v,n),t,\
 \end{enumerate} 
 Toutes les transitions de FLAME sont décrites dans la figure~\ref{FLAME} en annexe.
 \subsubsection{Fonctionnement}
-L'évaluation des termes se fait en trois phases~: la décomposition, la réduction et la reconstruction. 
+\begin{definition}[Décomposition d'un contexte]
+  \label{def:dec}
+La décomposition d'un contexte correspond à la liste des parties \og atomiques \fg~qui le composent.
+  \begin{align*}
+    d(\square) &= \square \\
+    d(\mcc[x/v]) &= d(\mcc)::\square[x/v]\\
+    d(\mcc~t) &= d(\mcc)::\square~t\\
+    d(v~\mcc) &= d(\mcc)::v~\square
+  \end{align*} 
+Cette définition s'étend naturellement à tout type de contexte.
+\end{definition}
 
+L'évaluation des termes se fait en trois phases~: la décomposition, la réduction et la reconstruction. 
 \paragraph{Décomposition.}
-Dans le premier temps, la machine décompose les termes jusqu'à trouver une réduction possible (substitution ou $\beta$-réduction). La machine sépare les applications en évaluant un des membres et stocke l'autre sur sa pile de contextes. De même, elle stocke sur sa pile les substitutions et évalue leur sous terme gauche (si elle ne fait pas partie d'une valeur). Cette phase d'exploration est réalisée par les transition dont l'état de départ est 0. 
+Dans le premier temps, la machine décompose les termes jusqu'à trouver une réduction possible (substitution ou $\beta$-réduction). 
+La machine sépare les applications en évaluant un des membres et stocke l'autre sur sa pile de contextes. 
+De même, elle stocke sur sa pile les substitutions et évalue leurs sous termes gauches (si elle ne fait pas partie d'une valeur). 
+Nous voyons immédiatement que cette phase implémente la fonction de décomposition d'un contexte (\ref{def:dec}).
+Cependant, elle ne stocke pas les contextes vide sur la pile.
+Cette phase d'exploration est réalisée par les transitions dont l'état de départ est 0. 
 
 \paragraph{Réduction.}
-Lorsque la machine a trouvé une réduction, elle va effectuer une transition $\rsa_{db}$ et rentrer dans l'état 1 si c'est une $\beta$-réduction, ou effectuer une transition $\rsa_{ls}$ et entrer dans l'état 2 si c'est une substitution. La machine se sert de l'état 1 pour réaliser une réduction du genre $d\beta$, il est utilisé pour calculer le décalage des indices de de Bruijn et mettre la nouvelle substitution sous les potentielles substitutions déja présentes. La machine entre ensuite dans l'état 2.
+Lorsque la machine a trouvé une réduction, elle va effectuer une transition $\rsa_{db}$ et rentrer dans l'état 1 si c'est une $\beta$-réduction, 
+ou effectuer une transition $\rsa_{ls}$ et entrer dans l'état 2 si c'est une substitution. 
+La machine se sert de l'état 1 pour réaliser une réduction du genre $d\beta$, 
+il est utilisé pour calculer le décalage des indices de de Bruijn et mettre la nouvelle substitution sous les potentielles substitutions déja présentes. 
+La machine entre ensuite dans l'état 2.
 
 \paragraph{Reconstruction.}
-Après avoir effectué une réduction, la machine va reconstruire le terme. Lors de cette phase, elle récupère les sous termes de sa pile de contexte et reconstruit le terme. Lorsqu'elle trouve une substitutions dans sa pile de contexte, elle vérifie que la substituions est bien liée dans son terme. Si ce n'est pas le cas elle supprime cette substitution lors de la transition $\rsa_{gc}$. Dans le cas contraire, elle replace simplement la substitution sur son terme courant.
+Après avoir effectué une réduction, la machine va reconstruire le terme. 
+Lors de cette phase, elle récupère les sous termes de sa pile de contexte et reconstruit le terme. 
+Lorsqu'elle trouve une substitutions dans sa pile de contexte, elle vérifie que la substituions est bien liée dans son terme. 
+Si ce n'est pas le cas elle supprime cette substitution lors de la transition $\rsa_{gc}$. 
+Dans le cas contraire, elle replace simplement la substitution sur son terme courant.
 
 \paragraph{Relance.}
-Lorsque la machine a fini de reconstruire un terme, si celui-ci est une valeur, elle entre dans l'état 3 et s'arrête complètement. Dans le cas contraire, la machine retourne dans l'état 0 et effectue un nouveau cycle d'évaluation.
+Lorsque la machine a fini de reconstruire un terme, si celui-ci est une valeur, elle entre dans l'état 3 et s'arrête complètement. 
+Dans le cas contraire, la machine retourne dans l'état 0 et effectue un nouveau cycle d'évaluation.
 
 \subsubsection{Mesure d'espace}
 Afin d'effectuer nos analyses sur l'espace pris par notre machine, nous définissons la mesure suivante~:
@@ -170,6 +198,8 @@ Dans le cas où l'entrée \textbf{arg} de la machine est \textbf{-}, nous prenon
 L'entrée \textbf{état} de la machine ne pouvant être que \textbf{0},\textbf{1},\textbf{2} ou \textbf{3} nous ne comptons pas cette information dans nos calculs.
 \section{Simulation de LS(G)C}
 \subsection{Propreté de LS(G)C}
+Étant donné un terme $t$, nous disons de ce terme qu'il est propre s'il ne possède aucune substitution explicite inutile.
+Cela nous assure que nous ne pourrons pas effectuer de réduction $GC$ sur le terme $t$.
 \begin{definition}[Propreté]
   Un terme $t$ est dit propre si $cl(t)$ possède une dérivation.
 \begin{figure}[h!]
@@ -182,8 +212,6 @@ L'entrée \textbf{état} de la machine ne pouvant être que \textbf{0},\textbf{1
   \caption{Règles de dérivation de la propreté.}\label{fig:clean}
 \end{figure}
 \end{definition}
-Étant donné un terme $t$, si $cl(t)$, cela signifie que le terme ne possède aucune substitution explicite inutile.
-Cela nous assure que nous ne pourrons pas effectuer de réduction $GC$ sur le terme $t$.
 
 \begin{theorem}[Préservation de la propreté]
   Soient $t_0$ et $t_1$ des termes. 
@@ -198,6 +226,7 @@ Cela nous assure que nous ne pourrons pas effectuer de réduction $GC$ sur le te
 Ce théorème nous assure donc que nos règles de calculs ne produisent aucun terme avec des substitutions explicites pouvant être nettoyées.
 
 \subsection{Comportement de FLAME}
+Afin de montrer que FLAME simule raisonablement LS(G)C, nous devons nous intéresser a ses différentes phases.
 \begin{lemma}[Décomposition]
   \label{lemmaplouf}
   Soient $\mathcal{C}$, $\mathcal{D}$ des contextes d'évaluation et $t$ un terme.
@@ -207,12 +236,12 @@ en utilisant un espace $|\mcc|+|t|+|\mcd|$
 \begin{proof}
   Par induction sur la forme de $\mathcal{C}$.
 \end{proof}
-
 \begin{lemma}[Plongeon sous les substitutions]
   \label{lemmaplouf2}
   Soient $\mathcal{D}$ un contexte d'évaluation, $\mcl$ un contexte de substitution et $t$, $u$ des termes.
-  \[ \etatu{u, \mcl[t], \mcd} \rightsquigarrow_{rdb}^* \etatu{u, t, \mcl::\mcd} \]
-en utilisant un espace $|\mcd|+|t|+|\mcl|+|u|$
+  \[ \etatu{(u,n), \mcl[t], \mcd} \rightsquigarrow_{rdb}^k \etatu{(u,n+k), t, \mcl::\mcd} \]
+  où $k$ est la longueur de la décomposition de $\mcl$,
+en utilisant un espace $|\mcd|+|t|+|\mcl|+|u| + |n+k|$
 \end{lemma}
 \begin{proof}
   Par induction sur la forme de $\mathcal{L}$.
@@ -226,15 +255,24 @@ en utilisant un espace $|\mcc|+|t|+|\mcd|$
 \begin{proof}
   Par induction sur la forme de $\mathcal{C}$.
 \end{proof}
+Grâce au lemme de décomposition \ref{lemmaplouf}, 
+nous nous assurons que la machine effectue correctement la décomposition des contextes et quantifions l'espace pris par cette opération.
+Le lemme de plongeon sous les substitutions \ref{lemmaplouf2} 
+nous assure quant à lui que l'argument d'une application est bien ammené devant les substitutions explicites lors d'une \og transition d$\beta$ \fg.
+De plus, nous voyons que le décalage à effectuer sur les indices de de Bruijn est bien calculé et que nous donnons l'espace utilisé par cette phase.
+Finalement, le lemme de reconstruction \ref{lemmaportugal} nous montre que le terme est correctement reconstruit après son évaluation 
+et nous donne également l'espace pris par la machine pour cette opération.
+
 \subsection{Simulation raisonnable de LS(G)C par FLAME}
-\begin{lemma}[Simulation raisonnable d'un pas]
+Grâce aux lemmes que nous venons de décrire, nous pouvons donc montrer que FLAME simule raisonnablement LS(G)C.
+\begin{theorem}[Simulation raisonnable d'un pas]
   Soient $t$ et $u$ des termes propres et $\mcd$ un contexte d'évaluation.
   Il existe une constante $k$ strictement positive telle que
   \begin{center}  
     $\text{Si}~t \rightarrow u~\text{avec un espace}~S\text{, alors}$\\  
   $\etat{-,t,\mcd}_0 \rightsquigarrow^* \etat{-,u,\mcd}_2~\text{avec un espace}~k\times S+|\mcd|$
   \end{center}
-\end{lemma}
+\end{theorem}
 \begin{proof}
   Par induction sur la dérivation de $t\rightarrow u$.
 \end{proof}
@@ -258,6 +296,7 @@ Pour ce faire, il nous faut trois choses~:
 \end{enumerate}
 
 \paragraph{Encodage.} L'encodage des termes se fait via une fonction récursive définie ainsi~:
+\label{enc}
 \begin{align*}
     \mce(x) &=x\\
     \mce(\lambda .t) &=\lambda \mce(t) A\\
@@ -291,13 +330,43 @@ La fonction s'exécute ainsi dans un espace linéaire en la longueur de l'encoda
 \paragraph{red.}
 Pour des raisons similaires à celles données pour la fonction lift, le programme en figure \ref{fig:red} calcule la réduction des indices de de Bruijn libre dans un encodage avec un espace linéaire.\\\\
 
-Les descriptions ci-dessus permettent donc de justifier l'existance d'une machine de Turing simulant FLAME avec un surcoût d'espace linéaire.
+Les descriptions ci-dessus permettent donc de justifier l'existence d'une machine de Turing simulant FLAME avec un surcoût d'espace linéaire.
 \begin{theorem}
   Il existe une machine de Turing $\mathcal{M}$ et une constante $k$ telles que si $\etatz{-, t, \square} \rsa^* \etatt{-, u, \square}$ avec un espace $S$, alors
   $\mathcal{M}~\bar{t} \ra^*~\bar{u}$ avec un espace $k\times S$. 
 \end{theorem}
 \section{Implémentation}
+Afin de pouvoir tester nos machines, nous avons créé Flash, un langage de script permettant de définir des termes et de les réduire.
+Un exemple de programme flash se trouve dans la figure \ref{fig:flash} en annexe.
+\subsection{Structure d'un programme}
+Un programme Flash est une séquence de scripts séparés par \og$;;$\fg.
+Chaque script est composé de deux choses~: des définitions de termes et des expressions à évaluer.
+Les déclarations et expressions d'un même script sont séparées par \og$;$\fg. 
+\paragraph{Définition des termes.}
+Nous pouvons définir deux types de termes différents ($\lambda$-termes et lsc-termes).
+Les déclarations des termes se font sous leur forme nommée.
+Par la suite les $\lambda$-termes seront gardés sous leur forme nommée.
+Au contraire, lsc-termes sont représentés sous leurs formes d'indices de de Bruijn et nous annotons les lieurs afin d'améliorer la lisibilité lors de l'affichage des termes.
+Cette différence dans la représentation s'explique par le format que les machines que nous voulions tester utilisent. 
+En plus de la possibilité de définir des termes, nous avons ajouté des termes prédéfinis.
+Nous pouvons également utiliser directement des nombres qui seront encodés avec un encodage de Scott.
 
+\subsubsection{Expressions}
+Chaque expression est une suite d'applications qui peuvent soit prendre la forme $e_1~e_2$ (on applique $e_1$ à $e_2$),
+ou bien la forme $e_2 |> e_1$ (on passe en argument $e_2$ à $e_1$).
+Dans ces expressions, nous pouvons utiliser les termes définis au début du scripts, des machines abstraites, 
+la variable red\_size (qui contient l'espace utilisé par la dernière réduction) ou encore des fonctions prédéfinies.  
+
+\paragraph{Machines abstraites.}
+Nous avons implémenté deux machines dans flash.
+Premièrement, nous avons FLAME \ref{FLAME} qui prend en entrée et renvoie des lsc termes.
+Deuxièmement, nous implémentons la Space-KAM \cite{accattoli2022reasonable}, celle-ci va prendre en paramètre et renvoyer des $\lambda$-termes.
+Les deux machines mettent à jour red\_size au cours de la réduction des termes.
+Nous pouvons optionellement afficher les termes a chaque étapes de réduction des machines.
+
+\paragraph{Fonctions prédéfinies.}
+En plus des machines abstraites, nous avons ajouter des fonctions utilitaires qui permettent, par exemple, 
+d'afficher des termes ou du texte, calculer la taille d'un terme, de l'encoder(\ref{enc}) ou encore de déplier un lsc-terme.
 \section{Conclusion et perspectives}
 
 \section{Remerciements}
@@ -402,5 +471,39 @@ let red_encoding e =
 \end{lstlisting}
   \end{center}
   \caption{Programme OCaml réduisant les indices dans un encodage.}\label{fig:red}
+\end{figure}
+
+\begin{figure}[h]
+  \begin{center}
+\begin{lstlisting}
+(*script 1*)
+lsc term t1 = (fun x -> x) ;
+lsc term t2 = (fun x y -> y); 
+
+t1 t2 |> flame|> print;
+t1 |> print;
+t2 |> print;;
+
+
+
+(*script2*)
+lsc term one = (fun s z -> s (fun s z -> z)); 
+lsc term n = 40;
+lsc term add = 
+  let succ = (fun n s z -> s n) in
+  fix (fun f x y -> y (fun n -> succ (f x n)) x) ;
+
+add one one |> print |> flame |> print |> unfold |> print;
+red_size |> print;
+print "pause\n\n\n";
+print (add one one) |> flame |> size |> print;
+"" |> print |> print |> print ;
+add one n |> encode |> print;
+add one n |> flame |> unfold |> print |> encode |> print;
+red_size |> print
+
+\end{lstlisting}
+  \end{center}
+  \caption{Exemple de script Flash.}\label{fig:flash}
 \end{figure}
 \end{document}
