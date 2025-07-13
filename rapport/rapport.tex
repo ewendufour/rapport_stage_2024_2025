@@ -9,11 +9,17 @@
 \usepackage{amsthm}
 \usepackage{amsmath}
 \usepackage{amssymb}
+\usepackage{tikz}
 \usepackage{stmaryrd}
 \usepackage{proof}
 \usepackage{booktabs}
 \usepackage{listings}
 \usepackage{langs}
+\usepackage{hyphsubst}
+
+\graphicspath{{./images/}}
+
+\bibliographystyle{abbrv}
 
 \definecolor{link_color}{RGB}{0,0,200}
 
@@ -30,6 +36,7 @@
 \newtheorem{lemma}[theorem]{Lemme}
 \newtheorem{proposition}[theorem]{Proposition}
 \newtheorem{corollary}[theorem]{Corollaire}
+\usetikzlibrary{positioning}
 
 \newcommand{\etat}[1]{\langle #1 \rangle}
 \newcommand{\etatz}[1]{\langle #1 \rangle_0}
@@ -51,7 +58,10 @@
 \date{mars - juillet 2025}
 \begin{document}
 \maketitle
-\begin{abstract}
+\begin{abstract} 
+Au cours de ce travail, nous définissons une mesure d’espace sur un modèle dérivé du $\lambda$-calcul.
+Dans un premier temps, nous montrons que ce modèle peut être simulé par des machines de Turing avec une consommation d’espace cohérente, en passant par une machine abstraite.
+Dans un second temps, nous implémentons un langage de scripts permettant la manipulation de termes ainsi que l’utilisation de machines abstraites sur ceux-ci.
 \end{abstract}
 \section{Introduction}
 \paragraph{Thèse d'invariance des modèles.}
@@ -64,6 +74,8 @@
  Il est donc naturel de nous assurer que ce modèle est bien dans cette classe.
  Bien qu'étant naturelle sur les machines de Turing, 
  les notions de temps et d'espace sur les $\lambda$-termes et leurs réductions ne sont pas immédiates.
+ Dans ce travail, nous étudierons la complexité du $\lambda$-calcul à travers le Linear Substitution Calculus.
+
 \paragraph{Le linear substitution calculus.}
 Le Linear Substitution Calculus est une variante du $\lambda$-calcul introduite par Accattoli et co-auteurs~\cite{accattoli2014nonstandard}.
 Les termes sont donnés par la grammaire suivante~:
@@ -80,22 +92,53 @@ Nous ajoutons à ces termes les règles de réduction suivantes~:
 où $\mcc$ et $\mcl$ sont des contextes construits par les grammaires~:
 \[\mcl ::= \square~|~\mcl[x/t]\]
 \[\mcc ::= \square~|~\mcc[x/t]~|~t[x/\mcc]~|~\mcc~t~|~t~\mcc~|~\lambda x.\mcc\]  
-\paragraph{Objectifs.} 
-Nous souhaitons montrer que le LSC est un modèle de calcul raisonnable pour l'espace. 
-Cependant, plusieurs difficultés se présentent. 
-D'une part, il nous faut définir une mesure d'espace pour le LSC et fixer une stratégie de réduction. 
-D'autre part, il faut montrer que le LSC muni de la stratégie et de la mesure peut être simulé par les machines de Turing et inversement avec un surcoût d'espace linéaire. 
-% Une autre difficulté se présentant est la possibilité de capturer les classes de complexité sous-linéaires, en particulier LOG-SPACE.
-% Afin de pouvoir caractériser cette classe de complexité, les machines de Turing distinguent un ruban d'entrée qu'elles ne comptent pas comme de l'espace utilisé et ne comptent que l'espace de travail. 
-%Ce procédé est beaucoup moins naturel sur les $\lambda$-termes, car ils représentent à la fois le~\og programme~\fg, les~\og  données d'entrée~\fg~et les~\og calculs~\fg~en cours. 
+
 \paragraph{Travaux connexes.}
+  Comme mentionnée précédemment, la question de la complexité peut se décliner sous deux formes~: spatiale et temporelle.
+  Concernant la compléxité en temps, Dal Lago et Martini montrent que le nombre de $\beta-$réduction est une mesure cohérente pour le $\lambda$-calcul faible \cite{dal2008weak}, 
+  c'est à dire sans réduction sous les $\lambda$-abstractions.
+  Accattoli et Dal Lago montrent finalement que cette mesure reste cohérente en autorisant les réductions sous les abstractions\cite{accattoli2016leftmost}.
+
+  Bien que la question du temps soit règlée, celle de l'espace ne possède toujours pas de réponse pleinement satisfaisante.
   Dans leurs travaux, \cite{forster2019weak}, Forster et al. montrent que le $\lambda$-calcul en appel par valeur est raisonnable pour l'espace (et le temps).
   Cependant, leur mesure ne permet pas de capturer les classes sous-linéaires.
-  Accattoli, Dal Lago et Vanoni décrivent une manière de capturer ces classes dans leurs travaux~\cite{accattoli2022reasonable}. 
+  En revanche, Accattoli, Dal Lago et Vanoni décrivent une manière permettant de capturer ces classes dans leurs travaux~\cite{accattoli2022reasonable}. 
   Néanmoins, leurs mesures se basent sur une machine abstraite et non pas sur les $\lambda$-termes.
 
-\section{Formalismes}
+\paragraph{Contributions.}
+Le schéma en figure \ref{plan} montre les différentes étapes que nous suivons pour montrer que notre modèle de calcul et sa mesure sont cohérents.
+Dans ce travail, nous commencons par définir LS(G)C et FLAME, les modèles que nous allons étudier, ainsi que leurs mesure d'espaces respectifs.
+Par la suite, nous montrons que FLAME simule LS(G)C avec un surcoût d'espace linéaire.
+Nous continuons en montrant que FLAME peut être simulée par une machine de Turing en utilisant également un surcoût d'espace linéaire.
+Nous finissons par implémenter un langage permettant de décrire des termes et de les fournirs à des machines abstraites.
+  \begin{figure}
+    \centering
+    \scalebox{0.5}{
+    \begin{tikzpicture}[>=stealth, node distance=3cm, every node/.style={font=\sffamily}, scale=1.5]
+
+  % Définition des noeuds en cercle
+\node (N) at (0, 2) {LS(G)C \ref{def:lsgc}};
+  \node (E) at (2, 0) {FLAME \ref{def:flame}};
+  \node (S) at (0, -2) {MT};
+  \node (W) at (-2, 0) {Weak CBV};
+
+  % Flèches extérieures : sens horaire + plus arrondies
+\draw[->, bend left=40] (N) to node[midway, above right] {Section \ref{sim:lsgc}} (E);
+  \draw[->, bend left=40] (E) to node[midway, below right] {Section \ref{sim:flame}} (S);
+    \draw[->, bend left=40] (S) to node[midway, below left] {Forster et al.\cite{forster2019weak}} (W);
+      \draw[->, bend left=40] (W) to node[midway, above left] {Travail en cours} (N);
+
+  % Flèche supplémentaire Ouest → Sud (sens trigonométrique inchangé)
+  \draw[->, bend left=40] (W) to node[midway, above] {Forster et al.\cite{forster2019weak}} (S);
+
+\end{tikzpicture}}
+\label{plan}
+\caption{Plan de simulation des modèles.}
+  \end{figure}
+
+\section{Formalismes utilisés}
 \subsection{LS(G)C}
+\label{def:lsgc}
 \subsubsection{Stratégie de réduction}
 Pour cette stratégie de réduction, nous distinguons une classe de termes que nous appellerons des valeurs.
 Ceux-ci sont donnés par la grammaire~:
@@ -139,15 +182,15 @@ Nous définissons la mesure d'espace ainsi~:
 L'utilisation d'indices de de Bruijn nous permet de ne pas avoir à stocker les variables des substitutions explicites, ce qui explique leurs coûts. 
 Nous étendons naturellement cette définition aux contextes.
 \subsection{La machine FLAME}
-
+\label{def:flame}
 FLAME est une machine abstraite qui implante la stratégie d'appel par valeur pour les termes du LSC. 
 Un état de FLAME se décrit par un triplet annoté de la forme $\etat{(v,n),t,\mcc}_e$ où~:
-\begin{enumerate}
+\begin{itemize}
   \item $t$ représente le terme en train d'être évaluer.
   \item $\mcc$ est une pile de contexte d'évaluation.
     \item $(v, n)$ contient optionellement l'argument d'une application et sa \og distance\fg~par rapport à l'abstraction.
     \item $e$ est un nombre qui indique la phase de fonctionnement de FLAME.
-\end{enumerate} 
+    \end{itemize} 
 Toutes les transitions de FLAME sont décrites dans la figure~\ref{FLAME} en annexe.
 \subsubsection{Fonctionnement}
 \begin{definition}[Décomposition d'un contexte]
@@ -161,8 +204,7 @@ La décomposition d'un contexte correspond à la liste des parties \og atomiques
   \end{align*} 
 Cette définition s'étend naturellement à tout type de contexte.
 \end{definition}
-
-L'évaluation des termes se fait en trois phases~: la décomposition, la réduction et la reconstruction. 
+L'évaluation des termes se fait en trois phases~: la décomposition, la réduction et la reconstruction.
 \paragraph{Décomposition.}
 Dans le premier temps, la machine décompose les termes jusqu'à trouver une réduction possible (substitution ou $\beta$-réduction). 
 La machine sépare les applications en évaluant un des membres et stocke l'autre sur sa pile de contextes. 
@@ -197,6 +239,7 @@ Afin d'effectuer nos analyses sur l'espace pris par notre machine, nous définis
 Dans le cas où l'entrée \textbf{arg} de la machine est \textbf{-}, nous prenons comme taille $0$. 
 L'entrée \textbf{état} de la machine ne pouvant être que \textbf{0},\textbf{1},\textbf{2} ou \textbf{3} nous ne comptons pas cette information dans nos calculs.
 \section{Simulation de LS(G)C}
+\label{sim:lsgc}
 \subsection{Propreté de LS(G)C}
 Étant donné un terme $t$, nous disons de ce terme qu'il est propre s'il ne possède aucune substitution explicite inutile.
 Cela nous assure que nous ne pourrons pas effectuer de réduction $GC$ sur le terme $t$.
@@ -227,6 +270,8 @@ Ce théorème nous assure donc que nos règles de calculs ne produisent aucun te
 
 \subsection{Comportement de FLAME}
 Afin de montrer que FLAME simule raisonablement LS(G)C, nous devons nous intéresser a ses différentes phases.
+
+Dans un premier temps, nous voulons que la machine décompose correctement les termes en utilisant aucun espace superflu.
 \begin{lemma}[Décomposition]
   \label{lemmaplouf}
   Soient $\mathcal{C}$, $\mathcal{D}$ des contextes d'évaluation et $t$ un terme.
@@ -236,6 +281,8 @@ en utilisant un espace $|\mcc|+|t|+|\mcd|$
 \begin{proof}
   Par induction sur la forme de $\mathcal{C}$.
 \end{proof}
+
+Dans un second temps, il nous faut nous assurer que la machine effectue correctement les réductions, et quantifier l'espace pris lors de cette phase.
 \begin{lemma}[Plongeon sous les substitutions]
   \label{lemmaplouf2}
   Soient $\mathcal{D}$ un contexte d'évaluation, $\mcl$ un contexte de substitution et $t$, $u$ des termes.
@@ -246,6 +293,8 @@ en utilisant un espace $|\mcd|+|t|+|\mcl|+|u| + |n+k|$
 \begin{proof}
   Par induction sur la forme de $\mathcal{L}$.
 \end{proof}
+
+Finalement, nous souhaitons que la machine reconstruise les termes correctement dans un espace correspondant a la taille de ceux-ci.
 \begin{lemma}[Reconstruction]
   \label{lemmaportugal}
   Soient $\mathcal{C}$ et $\mathcal{D}$ des contextes d'évaluation et $t$ un terme.
@@ -266,6 +315,7 @@ et nous donne également l'espace pris par la machine pour cette opération.
 \subsection{Simulation raisonnable de LS(G)C par FLAME}
 Grâce aux lemmes que nous venons de décrire, nous pouvons donc montrer que FLAME simule raisonnablement LS(G)C.
 \begin{theorem}[Simulation raisonnable d'un pas]
+  \label{thm:simres}
   Soient $t$ et $u$ des termes propres et $\mcd$ un contexte d'évaluation.
   Il existe une constante $k$ strictement positive telle que
   \begin{center}  
@@ -276,7 +326,7 @@ Grâce aux lemmes que nous venons de décrire, nous pouvons donc montrer que FLA
 \begin{proof}
   Par induction sur la dérivation de $t\rightarrow u$.
 \end{proof}
-
+Et par applications successives du théorème, nous obtenons le corollaire suivant~:
 \begin{corollary}
   Soient $t$ et $u$ des termes. Il existe une constante $k$ strictement positive telle que
   \begin{center}
@@ -286,14 +336,15 @@ Grâce aux lemmes que nous venons de décrire, nous pouvons donc montrer que FLA
 \end{corollary}
 
 \section{Simulation de FLAME}
+\label{sim:flame}
 Montrons maintenant que FLAME peut être simulée par des machines de Turing avec un surcoût en espace linéaire.
 Pour ce faire, il nous faut trois choses~:
-\begin{enumerate}
+\begin{itemize}
     \item Un encodage des termes ayant un surcoût d'espace linéaire par rapport à la taille de nos termes.
     \item Une représentation des différentes entrées de la machine.
     \item Des fonctions \textbf{red}, \textbf{lift}, \textbf{isFree} et \textbf{isValue}. Ces fonctions vont respectivement réduire ou augmenter les indices de de Bruijn dans un terme encodé, vérifier qu'une variable est libre dans un terme encodé et vérifier qu'un terme encodé est une valeur.
     De nouveau, ces fonctions doivent se faire avec un coût spatial au plus linéaire.
-\end{enumerate}
+\end{itemize}
 
 \paragraph{Encodage.} L'encodage des termes se fait via une fonction récursive définie ainsi~:
 \label{enc}
@@ -317,62 +368,103 @@ Maintenant, voyons comment effectuer les différentes opérations que fait la ma
 Pour plus de clarté, nous allons étudier des programmes qui calculent ces fonctions.
 
 \paragraph{isValue.} Il suffit de parcourir l'encodage de gauche à droite. Si nous rencontrons sur le symbole $S$, nous continuons. Si le symbole rencontré est $\lambda$ renvoyer $vrai$, sinon renvoyer $faux$. Tout cela se fait en espace constant.
-\paragraph{isFree.} Le programme en figure \ref{fig:isFree} permet de décider si une variable est libre dans l'encodage d'un terme.
-L'algorithme n'accède à l'encodage qu'en lecture et le parcours une unique fois de gauche à droite. Ainsi, celui-ci n'a besoin de garder en mémoire que le nombre de lieurs rencontrés.
-Le programme s'exécute donc avec un espace logarithmique en la longueur de l'encodage.
-\paragraph{lift.}
+\paragraph{isFree.} Afin de décider si une variable est libre, il suffit de parcourir une unique fois l'encodage en comptant le nombre de lieurs rencontrés.
+L'algorithme n'accedant à l'encodage qu'en lecture, il n'as besoin de stocker que le nombre de lieurs.
+Il utilise donc un espace logarithmique en la longueur de l'encodage.
+Le programme en figure \ref{fig:isFree} en annexe est une implémentation dans le langage OCaml de cette fonction.
 
+\paragraph{lift.}
 Le programme en figure~\ref{fig:lift} permet de calculer l'augmentation des indices de de Bruijn dans un terme encodé.
-Pour ce faire, la fonction garde en mémoire l'encodage en augmentant certains indices et change également le nombre de lieurs rencontrés. 
-La sauvegarde de l'encodage se fait en espace linéaire en la longueur de l'encodage. 
-La taille du nombre de lieurs est quant à elle logarithmique en la longueur de l'encodage.
+Pour augmenter les indices de de Bruijn dans un encodage recu en entrée, une machine de Turing doit parcourir son entrée une unique fois.
+Elle écrit sur sa bande de renvoie l'encodage en augmentant à la volée les variables libres. 
+Ainsi l'espace utilisé par la machine est celui utilisé pour détecter qu'une variable est libre ainsi que celui pour additionner deux nombres.
 La fonction s'exécute ainsi dans un espace linéaire en la longueur de l'encodage.
+La figure \ref{fig:lift} en annexe montre une fonction OCaml permettant de calculer se décalage.
+Cependant cette fonction, bien qu'utilisant un espace linéaire en la taille de l'encodage, utilise plus que l'espace décrit précédement car elle doit stocker temporairement l'encodage augmenté.
 \paragraph{red.}
-Pour des raisons similaires à celles données pour la fonction lift, le programme en figure \ref{fig:red} calcule la réduction des indices de de Bruijn libre dans un encodage avec un espace linéaire.\\\\
+Un procédé analogue nous permet de calculer la réduction d'un encodage avec un coût d'espace linéaire.
 
 Les descriptions ci-dessus permettent donc de justifier l'existence d'une machine de Turing simulant FLAME avec un surcoût d'espace linéaire.
 \begin{theorem}
   Il existe une machine de Turing $\mathcal{M}$ et une constante $k$ telles que si $\etatz{-, t, \square} \rsa^* \etatt{-, u, \square}$ avec un espace $S$, alors
   $\mathcal{M}~\bar{t} \ra^*~\bar{u}$ avec un espace $k\times S$. 
 \end{theorem}
-\section{Implémentation}
-Afin de pouvoir tester nos machines, nous avons créé Flash, un langage de script permettant de définir des termes et de les réduire.
-Un exemple de programme flash se trouve dans la figure \ref{fig:flash} en annexe.
-\subsection{Structure d'un programme}
-Un programme Flash est une séquence de scripts séparés par \og$;;$\fg.
-Chaque script est composé de deux choses~: des définitions de termes et des expressions à évaluer.
-Les déclarations et expressions d'un même script sont séparées par \og$;$\fg. 
-\paragraph{Définition des termes.}
-Nous pouvons définir deux types de termes différents ($\lambda$-termes et lsc-termes).
-Les déclarations des termes se font sous leur forme nommée.
-Par la suite les $\lambda$-termes seront gardés sous leur forme nommée.
-Au contraire, lsc-termes sont représentés sous leurs formes d'indices de de Bruijn et nous annotons les lieurs afin d'améliorer la lisibilité lors de l'affichage des termes.
-Cette différence dans la représentation s'explique par le format que les machines que nous voulions tester utilisent. 
-En plus de la possibilité de définir des termes, nous avons ajouté des termes prédéfinis.
-Nous pouvons également utiliser directement des nombres qui seront encodés avec un encodage de Scott.
 
-\subsubsection{Expressions}
-Chaque expression est une suite d'applications qui peuvent soit prendre la forme $e_1~e_2$ (on applique $e_1$ à $e_2$),
-ou bien la forme $e_2 |> e_1$ (on passe en argument $e_2$ à $e_1$).
-Dans ces expressions, nous pouvons utiliser les termes définis au début du scripts, des machines abstraites, 
-la variable red\_size (qui contient l'espace utilisé par la dernière réduction) ou encore des fonctions prédéfinies.  
+\section{Implémentation}
+Nous souhaitons étudier le comportement de FLAME, nous assurer qu'elle évalue correctement les termes ou encore voir les séquences d'évaluation des termes.
+C'est dans ce but que nous développons Flash, un langage de scripts.
+Ce langage nous permet de déclarer des termes, ceux-ci sont traduits et encodés dans un format spécifié par l'utilisateur.
+Il permet ensuite de fournir aux machines abstraites les termes et de récupèrer leur résultats.
 
 \paragraph{Machines abstraites.}
-Nous avons implémenté deux machines dans flash.
-Premièrement, nous avons FLAME \ref{FLAME} qui prend en entrée et renvoie des lsc termes.
-Deuxièmement, nous implémentons la Space-KAM \cite{accattoli2022reasonable}, celle-ci va prendre en paramètre et renvoyer des $\lambda$-termes.
-Les deux machines mettent à jour red\_size au cours de la réduction des termes.
-Nous pouvons optionellement afficher les termes a chaque étapes de réduction des machines.
+Nous implémentons deux machines abstraites dans nos travaux.
+Premièrement, nous implémentons FLAME. Cette machine travaille sur des lsc-termes sous leur forme de de Bruijn.
+Son implémentation se trouve en figure \ref{fig:flameimplem} en annexe.
+Secondement, nous implémentons la Space-KAM \cite{accattoli2022reasonable}, celle-ci prends en entrée et renvoie des $\lambda$-termes nommés.
+Les deux machines ne fonctionnant pas avec des termes de même nature, nous devons être capable de déclarer des termes sous différents formats.
 
-\paragraph{Fonctions prédéfinies.}
-En plus des machines abstraites, nous avons ajouter des fonctions utilitaires qui permettent, par exemple, 
-d'afficher des termes ou du texte, calculer la taille d'un terme, de l'encoder(\ref{enc}) ou encore de déplier un lsc-terme.
+\paragraph{Déclaration et encodage des termes.}
+Comme nous l'avons vu, nos machines travaillent sur des termes de nature différentes.
+Nous utilisons donc des mots clés devant nos déclaration afin de spécifier l'encodage des termes.
+Actuellement, nous pouvons déclarer des termes avec les mots clés \textbf{lsc} et \textbf{lambda}.
+Chaque mot clé permet de définir des termes en utilisant des constructions qui peuvent leur être propre (ex. t[x/v] avec lsc).
+Les déclarations de termes se font en utilisant des variables nommées et non en indices de de Bruijn.
+Lorsqu'un terme lsc est déclaré, Flash traduit la forme nommée vers une forme de de Bruijn tout en gardant une trace du nom des lieurs.
+Cela nous permet de garder une forme plus agréable pour l'utilisateur lors de l'affichage d'un terme.
+Maintenant que nous pouvons déclarer nos termes et que nous avons nos machines, il faut que notre langage fassent intérargir ces entités.
+
+\paragraph{Structure d'un programme Flash.}
+ Un programme Flash est une séquence de scripts séparés par \og$;;$\fg.
+ Chaque script est composé de deux choses~: des définitions de termes et des expressions à évaluer.
+ Les déclarations et expressions d'un même script sont séparées par \og$;$\fg. 
+ Un terme n'est accessible que dans le script où il est déclaré.
+ Les expressions d'un scripts sont des suites d'applications qui peuvent soit prendre la forme $e_1~e_2$ (on applique $e_1$ à $e_2$),
+ ou bien la forme $e_2 |> e_1$ (on passe en argument $e_2$ à $e_1$).
+Elles permettent, entre autres, de fournir aux machines les termes déclarés, d'afficher des termes, calculer leur taille, etc.
+Un exemple de programme Flash et son résultat se trouve sur la figure \ref{ex:flash}.
+
+Ce langage possède les avantages d'être minimaliste et très modulable. 
+En effet, nous avons la possibilité d'intérargir avec des termes et des machines complètement distincte. 
+Pour implémenter et communiquer avec une nouvelle machine, 
+il suffit de définir un encodage et des constructions pour les termes, ainsi que d'implémenter une machine abstraite.
+
 \section{Conclusion et perspectives}
+  \begin{figure}
+    \centering
+    \scalebox{0.5}{
+    \begin{tikzpicture}[>=stealth, node distance=3cm, every node/.style={font=\sffamily}, scale=1.5]
 
+  % Définition des noeuds en cercle
+\node (N) at (0, 2) {LS(G)C \ref{def:lsgc}};
+  \node (E) at (2, 0) {FLAME \ref{def:flame}};
+  \node (S) at (0, -2) {MT};
+  \node (W) at (-2, 0) {Weak CBV};
+
+  % Flèches extérieures : sens horaire + plus arrondies
+\draw[->, bend left=40] (N) to node[midway, above right] {Section \ref{sim:lsgc}} (E);
+  \draw[->, bend left=40] (E) to node[midway, below right] {Section \ref{sim:flame}} (S);
+    \draw[->, bend left=40] (S) to node[midway, below left] {Forster et al.\cite{forster2019weak}} (W);
+      \draw[->, bend left=40] (W) to node[midway, above left] {Travail en cours} (N);
+
+  % Flèche supplémentaire Ouest → Sud (sens trigonométrique inchangé)
+  \draw[->, bend left=40] (W) to node[midway, above] {Forster et al.\cite{forster2019weak}} (S);
+
+\end{tikzpicture}}
+\caption{Rappel des contributions.}
+  \end{figure}
+
+
+Nous avons commencé ce travail par définir notre modèle de départ, LS(G)C ainsi que sa mesure d'espace. De même pour notre modèle intermédiaire, FLAME.
+Par la suite, nous avons montré que FLAME simulait LS(G)C avec un espace raisonnable, et qu'elle était elle même simulable par une machine de Turing avec un surcoût d'espace linéaire.
+Nous avons terminé en implémentant un petit langage de scripts permettant de de définir des termes et de les donner à des machines abstraites.
+
+Pour continuer nos travaux, une première choses à faire serait de montrer que LS(G)C peut simuler les machines de Turing avec un surcoût d'espace linéaire également.
+Une des pistes envisageable serait de se baser sur les travaux de Forster et al. \cite{forster2019weak} et de montrer que LS(G)C simule le $\lambda$-calcul en appel par valeur faible.
+Cependant, nos mesures ne semblent pas permettre de capturer les classes sous-linéaires. 
+Nous pourrions, pour cela, essayer d'étendre le travail de Accattoli, Dal Lago et Vanoni\cite{accattoli2022reasonable} en proposant un modèle de calcul qui se rapprocherais plus du $\lambda$-calcul et serais moins bas niveau que la Space-KAM.
 \section{Remerciements}
-Je tiens à remercier très chaleureusement Thibaut pour avoir encadré ce stage ainsi que pour toute l'aide qu'il m'a apporté. 
-Je tiens également à remercier Travis pour son aide durant ce stage. Enfin, je tiens à remercier l'équipe du LMF qui s'est montrée chaleureuse et très accueillante.
-\bibliographystyle{abbrv}
+Je remercie très chaleureusement Thibaut pour avoir encadré ce stage ainsi que pour toute l'aide qu'il m'a apporté. 
+Je tiens également à remercier Travis pour son aide durant ce stage ainsi que l'équipe du LMF qui s'est montrée accueillante et très sympathique.
 \bibliography{main}
 \section*{Annexe}
 \begin{figure}[h]
@@ -424,7 +516,7 @@ let rec free (n : int) (e : encoding) : bool =
     | Num i :: el -> if i = n then true else free n el
 \end{lstlisting}
   \end{center}
-  \caption{Programme OCaml décidant si une variable est libre.}\label{fig:isFree}
+  \caption{Fonction OCaml décidant si une variable est libre.}\label{fig:isFree}
 \end{figure}
 
 \begin{figure}[h]
@@ -447,63 +539,97 @@ let lift_encoding shift e =
   aux shift 0 [] e
 \end{lstlisting}
   \end{center}
-  \caption{Programme OCaml augmentant les indices dans un encodage.}\label{fig:lift}
+  \caption{Fonction OCaml augmentant les indices dans un encodage.}\label{fig:lift}
 \end{figure}
 
-\begin{figure}[h]
+
+\begin{figure}
   \begin{center}
 \begin{lstlisting}
-let red_encoding e =
-  let rec aux n acc = function
-    | [] -> List.rev acc
-    | Num n' :: es when n' > n -> aux n (Num (n' - 1) :: acc) es
-    | Num n' :: es -> aux n (Num n' :: acc) es
-    | BeginLambda :: es -> aux (n + 1) (BeginLambda :: acc) es
-    | BeginSubst :: es -> aux (n + 1) (BeginSubst :: acc) es
-    | LeftBrack :: es -> aux (n - 1) (LeftBrack :: acc) es
-    | RightBrack :: es -> aux n (RightBrack :: acc) es
-    | Space :: es -> aux n (Space :: acc) es
-    | LeftPar :: es -> aux n (LeftPar :: acc) es
-    | RightPar :: es -> aux n (RightPar :: acc) es
-    | EndLambda :: es -> aux (n - 1) (EndLambda :: acc) es
+  
+let flame t =
+  (* Meta operations for de Bruijn indices*)
+  ...
+  (* Size computation *)
+  let maxi = ref 0 in
+
+  (* Reconstruction *)
+  let rec build_lsc (conts : context list) (t : lsc) : lsc =
+    match conts with
+    | LA u :: cl -> build_lsc cl (App (u, t))
+    | RA u :: cl -> build_lsc cl (App (t, u))
+    | LS (s, u) :: cl when is_free 0 t -> build_lsc cl (Ls (s, t, u))
+    | LS _ :: cl -> build_lsc cl (red t)
+    | [] when is_clean_value t ->
+        maxi := max !maxi (size t);
+        t
+    | [] -> dive t
+
+  (* Reduction *)
+  and db conts u v =
+    let rec db_aux conts u v prof =
+      match u with
+      | Abs (o, t') -> build_lsc (LS (o, lift prof v) :: conts) t'
+      | Ls (o, t', u') -> db_aux (LS (o, u') :: conts) t' v (prof + 1)
+      | _ -> assert false
+    in
+    db_aux conts u v 0
+
+  (*Decomposition*)
+  and dive t =
+    PP.print_lsc_nl t;
+    maxi := max !maxi (size t);
+    let rec plonge (conts : context list) (te : lsc) : lsc =
+      match te with
+      | Ls (o, t, u) -> plonge (LS (o, u) :: conts) t
+      | Var n ->
+          let to_plug = lift (n + 1) (find_subst conts n) in
+          maxi := max !maxi (cl_size conts + size to_plug);
+          build_lsc conts to_plug
+          (* Ls *)
+      | App (t, u) when is_clean_value t && is_clean_value u ->
+          db conts t u (* Db *)
+      | App (t, u) when is_clean_value t && not (is_clean_value u) ->
+          plonge (LA t :: conts) u
+      | App (t, u) -> plonge (RA u :: conts) t
+      | t -> t
+    in
+    plonge [] t
   in
-  aux 0 [] e
+  let ((_, t) as res) = (!maxi, dive t) in
+  PP.print_lsc_nl t;
+  res
 \end{lstlisting}
   \end{center}
-  \caption{Programme OCaml réduisant les indices dans un encodage.}\label{fig:red}
+  \caption{Implémentation de FLAME en OCaml.}\label{fig:flameimplem}
 \end{figure}
+
 
 \begin{figure}[h]
-  \begin{center}
-\begin{lstlisting}
-(*script 1*)
-lsc term t1 = (fun x -> x) ;
-lsc term t2 = (fun x y -> y); 
-
-t1 t2 |> flame|> print;
-t1 |> print;
-t2 |> print;;
-
+  \centering
+  \begin{minipage}{0.48\textwidth}
+    \begin{lstlisting}
+lambda t1 = fun x -> x ;
+lambda t2 = fun y -> t1 y;
+lambda t3 = fun t1 -> t2 t1;
+"Spacekam:" |> print;
+t2 t1 |> spacekam ;;
 
 
-(*script2*)
-lsc term one = (fun s z -> s (fun s z -> z)); 
-lsc term n = 40;
-lsc term add = 
-  let succ = (fun n s z -> s n) in
-  fix (fun f x y -> y (fun n -> succ (f x n)) x) ;
-
-add one one |> print |> flame |> print |> unfold |> print;
-red_size |> print;
-print "pause\n\n\n";
-print (add one one) |> flame |> size |> print;
-"" |> print |> print |> print ;
-add one n |> encode |> print;
-add one n |> flame |> unfold |> print |> encode |> print;
-red_size |> print
-
-\end{lstlisting}
-  \end{center}
-  \caption{Exemple de script Flash.}\label{fig:flash}
+lsc t1 = fun x -> x ;
+lsc t2 = fun y -> t1 y;
+lsc t3 = fun t1 -> t2 t1;
+"Flame:\n"|> print;
+t2 t1 |> flame 
+    \end{lstlisting}
+  \end{minipage}%
+  \hfill
+  \begin{minipage}{0.48\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{result.png}
+  \end{minipage}
+  \caption{Exemple de code flash et résultat d'éxecution.}
+  \label{ex:flash}
 \end{figure}
+  
 \end{document}
