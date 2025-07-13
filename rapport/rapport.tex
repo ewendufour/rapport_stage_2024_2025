@@ -331,6 +331,7 @@ Grâce aux lemmes que nous venons de décrire, nous pouvons donc montrer que FLA
 \end{proof}
 Et par applications successives du théorème, nous obtenons le corollaire suivant~:
 \begin{corollary}
+  \label{cor:lsgcflame}
   Soient $t$ et $u$ des termes. Il existe une constante $k$ strictement positive telle que
   \begin{center}
     Si $t \ra^* u$ avec $u$ une valeur en espace $S$, alors\\
@@ -338,18 +339,20 @@ Et par applications successives du théorème, nous obtenons le corollaire suiva
   \end{center}
 \end{corollary}
 
+Donc FLAME simule bien LS(G)C avec un surcoût d'espace linéaire.
+
 \section{Simulation de FLAME}
 \label{sim:flame}
-Montrons maintenant que FLAME peut être simulée par des machines de Turing avec un surcoût en espace linéaire.
+Montrons maintenant que FLAME peut être simulée par des machines de Turing avec un espace raisonnable.
 Pour ce faire, il nous faut trois choses~:
 \begin{itemize}
     \item Un encodage des termes ayant un surcoût d'espace linéaire par rapport à la taille de nos termes.
     \item Une représentation des différentes entrées de la machine.
-    \item Des fonctions \textbf{red}, \textbf{lift}, \textbf{isFree} et \textbf{isValue}. Ces fonctions vont respectivement réduire ou augmenter les indices de de Bruijn dans un terme encodé, vérifier qu'une variable est libre dans un terme encodé et vérifier qu'un terme encodé est une valeur.
+    \item Les fonctions internes de FLAME \textbf{red}, \textbf{lift}, \textbf{isFree} et \textbf{isValue}. Ces fonctions vont respectivement réduire ou augmenter les indices de de Bruijn dans un terme encodé, vérifier qu'une variable est libre dans un terme encodé et vérifier qu'un terme encodé est une valeur.
     De nouveau, ces fonctions doivent se faire avec un coût spatial au plus linéaire.
 \end{itemize}
 
-\paragraph{Encodage.} L'encodage des termes se fait via une fonction récursive définie ainsi~:
+\paragraph{Encodage.} L'encodage des termes dans se fait via une fonction récursive des termes dans l'alphabet $\{0,~1,~\lambda,~A,~\text{\textvisiblespace},~(,~),~S,~[,~]\}$ définie ainsi~:
 \label{enc}
 \begin{align*}
     \mce(x) &=x\\
@@ -368,7 +371,7 @@ Ce choix de modèle fonctionne, car les machines de Turing à plusieurs rubans p
 \subsection{Fonctions internes de FLAME}
 
 Maintenant, voyons comment effectuer les différentes opérations que fait la machine sur notre encodage.
-Pour plus de clarté, nous allons étudier des programmes qui calculent ces fonctions.
+% Pour plus de clarté, nous allons étudier des programmes qui calculent ces fonctions.
 
 \paragraph{isValue.} Il suffit de parcourir l'encodage de gauche à droite. Si nous rencontrons sur le symbole $S$, nous continuons. Si le symbole rencontré est $\lambda$ renvoyer $vrai$, sinon renvoyer $faux$. Tout cela se fait en espace constant.
 \paragraph{isFree.} Afin de décider si une variable est libre, il suffit de parcourir une unique fois l'encodage en comptant le nombre de lieurs rencontrés.
@@ -377,7 +380,6 @@ Il utilise donc un espace logarithmique en la longueur de l'encodage.
 Le programme en figure \ref{fig:isFree} en annexe est une implémentation dans le langage OCaml de cette fonction.
 
 \paragraph{lift.}
-Le programme en figure~\ref{fig:lift} permet de calculer l'augmentation des indices de de Bruijn dans un terme encodé.
 Pour augmenter les indices de de Bruijn dans un encodage reçu en entrée, une machine de Turing doit parcourir son entrée une unique fois.
 Elle écrit sur sa bande de renvoi l'encodage en augmentant à la volée les variables libres. 
 Ainsi, l'espace utilisé par la machine est celui utilisé pour détecter qu'une variable est libre ainsi que celui pour additionner deux nombres.
@@ -386,13 +388,25 @@ La figure \ref{fig:lift} en annexe montre une fonction OCaml permettant de calcu
 Cependant, cette fonction, bien qu'utilisant un espace linéaire en la taille de l'encodage, utilise plus que l'espace décrit précédemment, car elle doit stocker temporairement l'encodage augmenté.
 
 \paragraph{red.}
-Un procédé analogue nous permet de calculer la réduction d'un encodage avec un coût d'espace linéaire.
+Un procédé analogue nous permet de calculer la réduction d'un encodage avec un coût d'espace linéaire.\\
 
 Les descriptions ci-dessus permettent donc de justifier l'existence d'une machine de Turing simulant FLAME avec un surcoût d'espace linéaire.
 \begin{theorem}
+  \label{thm:flametm}
   Il existe une machine de Turing $\mathcal{M}$ et une constante $k$ telles que si $\etatz{-, t, \square} \rsa^* \etatt{-, u, \square}$ avec un espace $S$, alors
   $\mathcal{M}~\bar{t} \ra^*~\bar{u}$ avec un espace $k\times S$. 
 \end{theorem}
+
+FLAME peut être simulée par les machines de Turing avec un surcoût d'espace linéaire.
+Finalement, LS(G)C peut être simulé raisonnablement (pour l'espace) par les machines de Turing.  
+
+\begin{theorem}[Simulation]
+  Soient $t$ et $u$ des termes. Il existe une machine de Turing $\mathcal{M}$ et une constante $k$ telles que si $t \ra^* u$ avec $u$ une valeur en espace $S$, alors
+  $\mathcal{M}~\bar{t} \ra^*~\bar{u}$ avec un espace $k\times S$. 
+\end{theorem}
+\begin{proof}
+  En utilisant le corollaire~\ref{cor:lsgcflame} et le theorème~\ref{thm:flametm}.
+\end{proof}
 
 \section{Implémentation}
 Nous souhaitons étudier le comportement de FLAME, nous assurer qu'elle évalue correctement les termes ou encore voir les séquences d'évaluation des termes.
@@ -462,9 +476,9 @@ Par la suite, nous avons montré que FLAME simulait LS(G)C avec un espace raison
 Nous avons terminé en implémentant un petit langage de script permettant de définir des termes et de les donner à des machines abstraites.
 
 Pour continuer nos travaux, la première chose à faire serait de montrer que LS(G)C peut simuler les machines de Turing avec un surcoût d'espace linéaire également.
-Une des pistes envisageables serait de se baser sur les travaux de Forster et al. \cite{forster2019weak} et de montrer que LS(G)C simule le $\lambda$-calcul en appel par valeur faible.
+Une des pistes envisageables serait de se baser sur les travaux de Forster et al.~\cite{forster2019weak} et de montrer que LS(G)C simule le $\lambda$-calcul en appel par valeur faible.
 Cependant, nos mesures ne semblent pas permettre de capturer les classes sous-linéaires. 
-Nous pourrions, pour cela, essayer d'étendre le travail de Accattoli, Dal Lago et Vanoni\cite{accattoli2022reasonable} en proposant un modèle de calcul qui se rapprocherait plus du $\lambda$-calcul et serait moins bas niveau que la Space-KAM.
+Nous pourrions, pour cela, essayer d'étendre le travail de Accattoli, Dal Lago et Vanoni~\cite{accattoli2022reasonable} en proposant un modèle de calcul qui se rapprocherait plus du $\lambda$-calcul et serait moins bas niveau que la Space-KAM.
 \section{Remerciements}
 Je remercie très chaleureusement Thibaut pour avoir encadré ce stage ainsi que pour toute l'aide qu'il m'a apporté. 
 Je tiens également à remercier Travis pour son aide durant ce stage ainsi que l'équipe du LMF qui s'est montrée accueillante et très sympathique.
@@ -515,6 +529,7 @@ let rec free (n : int) (e : encoding) : bool =
     | BeginSubst :: el -> free (n + 1) el
     | (LeftPar  | RightPar  | RightBrack | Space) :: el ->
         free n el
+
     | LeftBrack :: el -> free (n - 1) el
     | Num i :: el -> if i = n then true else free n el
 \end{lstlisting}
