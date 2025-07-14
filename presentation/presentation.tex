@@ -1,0 +1,339 @@
+\documentclass[dvipsnames]{beamer}
+
+\addtobeamertemplate{navigation symbols}{}{%
+    \usebeamerfont{footline}%
+    \usebeamercolor[fg]{footline}%
+    \hspace{1em}%
+    \insertframenumber/\inserttotalframenumber
+}
+
+% Thème
+\usetheme{Darmstadt}
+\usecolortheme{seahorse}
+\usepackage[T1]{fontenc}
+
+%% La langue
+\usepackage[french]{babel} 
+
+% Math
+\usepackage{bbm}
+\usepackage{amsthm}
+\usepackage{amsmath}
+\usepackage{stmaryrd}
+\usepackage{amssymb}
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\Q}{\mathbb{Q}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\C}{\mathbb{C}}
+\newcommand{\K}{\mathbb{K}}
+\renewcommand{\S}{\mathbb{S}}
+\newcommand{\tend}[1]{\underset{#1\to +\infty}{\longrightarrow}}
+
+%inference
+\usepackage{semantic}
+
+% colors
+\usepackage{xcolor}
+
+% barrer
+ \usepackage{soul}
+
+% wrap images around text
+\usepackage{wrapfig}
+
+% listing (code)
+\usepackage{listings}
+\lstset{
+ language=caml,
+ columns=[c]fixed,
+ basicstyle=\small\ttfamily,
+ keywordstyle=\color{blue},
+ commentstyle=\color{Green}\bfseries,
+ breaklines=true,
+ mathescape=true
+}
+
+% \setbeamercolor{palette primary}{bg=Tan!30,fg=black}
+% \setbeamercolor{palette secondary}{bg=Tan!70,fg=black}
+% \setbeamercolor{palette tertiary}{bg=Tan!70,fg=black}
+% \setbeamercolor{palette quaternary}{bg=Tan!10,fg=black}
+
+% % 1- Block title (background and text)
+% \setbeamercolor{block title}{bg=Bittersweet!50,fg=black}
+% % 2- Block body (background)
+% \setbeamercolor{block body}{bg=Bittersweet!10}
+
+% % 1- Block title (background and text)
+% \setbeamercolor{block title alerted}{bg=RedViolet!70,fg=black}
+% % 2- Block body (background)
+% \setbeamercolor{block body alerted}{bg=RedViolet!10}
+
+% % 1- Block title (background and text)
+% \setbeamercolor{block title example}{bg=ForestGreen!70,fg=black}
+% % 2- Block body (background)
+% \setbeamercolor{block body example}{bg=ForestGreen!10}
+
+
+% Titre
+\title{Implicit Computational Complexity with FaustML}
+\author{Travis LEBLANC}
+\institute{University Paris-Saclay\\
+Laboratoire Méthodes Formelles}
+\date{16 juillet 2025}
+\AtBeginSection[]
+{ \begin{frame}
+    \frametitle{Outline}
+    \tableofcontents[currentsection]
+  \end{frame} }
+
+% Document
+\begin{document}
+\frame{\titlepage}
+
+\section*{Introduction}
+
+\subsection*{Internship}
+\begin{frame}{Internship Environnement}
+
+\end{frame}
+
+
+\begin{frame}{Initial Goal}
+    \begin{alertblock}{Initial goal}
+        Characterize time complexity classes using FaustML 
+    \end{alertblock}\pause
+    \begin{block}{Definition: FaustML}
+        A function in FaustML follows the following grammar: 
+    \begin{align*}
+        \text{ Function } f(x_1,..,x_n) &= e \\
+        \text{ Expression } \qquad \quad e ::&= x \\
+        & |\; let \; x  =  e_1 \; in \; e_2 \\
+        & |\; c(e_1,..,e_n) \\
+        & |\; f(e_1,..,e_n) \\
+        & |\; match \; e \; with \; (c_i(x_1,..,x_n) \to e_i)_i \\
+    \end{align*}
+    \end{block}
+\end{frame}
+
+\subsection*{history of ICC}
+
+\begin{frame}{ICC's dream}
+    \small ICC = Implicit Computational Complexity\\
+
+    % \includegraphics[width= 0.9\textwidth]{mygcc.png}
+\end{frame}
+
+\begin{frame}{ICC "rough" picture}
+
+    % \includegraphics[width=0.9\textwidth]{ICC-full-picture.png}
+\end{frame}
+
+\begin{frame}[fragile]{THE ICC's Question}
+    \centering \textbf{what is wrong with this \st{picture} program?} 
+    
+    \begin{lstlisting}
+    let rec twice(n) = match n with 
+        | Z $\to$ Z 
+        | S(m) $\to$ S(S(twice(m)))
+    let rec exp(n) = match n with 
+        | Z $\to$ S(Z)
+        | S(m) $\to$ twice(exp(m))
+    \end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{THE ICC's Question}
+    \centering \textbf{what is wrong with this \st{picture} program?} 
+    \begin{lstlisting}
+    let rec twice(n) = match n with 
+        | Z $\to$ Z 
+        | S(m) $\to$ S(S(twice(m)))
+    let rec exp(n) = match n with 
+        | Z $\to$ S(Z)
+        | S(m) $\to$ twice(exp(m))
+    \end{lstlisting}
+    In the data-tiering branch, the \textbf{composition of twice and exp} is the problem.
+\end{frame}
+
+\section{data-tiering}
+\begin{frame}{Data-tiering}
+    \begin{block}{tiering}
+        data-tiering is affecting to each expressions and functions integers (called \textbf{tier}) and add constraints to them.
+        It is stated as a \textbf{typing} judgment $f \triangleright i_1,..,i_n \to k$
+    \end{block} \pause
+    for example the composition propagate the tiers:
+    \begin{gather*}
+        \inference{f \triangleright p \to k \quad g \triangleright i \to p}{f \circ g \triangleright i \to k}
+    \qquad \inference{f \text{ recursive } &...& \color{red}{p > k}}{f \triangleright p \to k}
+    \end{gather*}
+\end{frame}
+
+% \begin{frame}[fragile]{Data-tiering's problem}
+%     Data-tiering is unable to accept the usual implementation of insert sort, because it have the same constraint problem
+%     \begin{lstlisting}
+%     (*insert: i,j->j with i>j*)
+%     let rec insert(l,x) = ...
+%     (*sort: p->k ERROR *)
+%     let rec sort(l) = match l with 
+%         | Nil $\to$ Nil 
+%         | Cons(x,l) $\to$ insert(sort(l),x) 
+%     \end{lstlisting}
+% \end{frame}
+
+\begin{frame}{Data-tiering's problem}
+    % \includegraphics[scale=0.1]{same-picture-ICC.png}
+\end{frame}
+
+\begin{frame}[fragile]{Data-tiering solution?}
+If we use a fuel, we can bypass this problem:
+\begin{lstlisting}
+let rec insert(n,l,x) = ... (*n is a fuel*)
+
+let rec sort(n,l) = match n with 
+  | Z $\to$ l
+  | S(m) $\to$ match l with 
+    | Nil $\to$ Nil 
+    | Cons(x,l1) $\to$ insert(m,sort(m,tl(l)),x)
+              (* require parameter subst *)
+\end{lstlisting}
+
+But now we need our characterization to allow parameter substitution, 
+which was not the case of SIMREC from Avanzini and Dal Lago 
+
+\end{frame}
+
+\section{SIMREC parameter subst}
+
+\begin{frame}{Extension to SIMREC}
+    SIMREC structure (from Avanzini and Dal Lago):
+\begin{align*}
+    f &:= f_c & f() &= c() \label{null-constr0} \tag{0-constr}\\
+    f &:= f_c &f(\vec{x}) &= c(\vec{x}) \label{constr0} \tag{constr}\\
+    f &:= \Pi_i^n\;\;& f(x_1,..,x_n) &= x_i \label{proj0} \tag{proj}\\
+    f &:= h \circ (g_1,..,g_k) &f(\vec{x}) &= h(g_1(\vec{x}),..,g_k(\vec{x})) \label{comp0} \tag{comp}\\
+    f &:= case((g_i)_i)& f(c_i(\vec{x}), \vec{y}) &=  g_i(\vec{x}, \vec{y}) \label{case0} \tag{case}  \\
+    f_j &:= simrec((h_{ij})_{ij})_j & f_j(c_i(\vec{x}), \vec{y}) &=  h_{ij}(\vec{x}, \vec{y}, f_1(x_1, \vec{y})..f_1(x_n, \vec{y}).. f_k(x_n, \vec{y})) \label{rec0} \tag{rec}
+\end{align*}\pause
+    \begin{block}{Definition}
+        The class \textbf{SAFE} is the smallest class of function containing (0-constr) (proj) and closed under (comp) and (case) 
+    \end{block}
+\end{frame}
+\begin{frame}[fragile]{Safe functions}
+    \begin{example}
+        \texttt{tl} is a SAFE function:
+    \begin{lstlisting}
+        tl(l) = match l with 
+            | Nil $\to$ Nil 
+            | Cons(x,l) $\to$ l
+    \end{lstlisting}
+    \end{example}    \pause
+
+    \begin{alertblock}{safe function's crutial property}
+        if $\pi \in SAFE$ then for any values $\vec{v}$: $STs(\pi(\vec{v})) \subseteq STs(\vec{v}) \cup E$
+    \end{alertblock}
+    \small STs(v) are the sub-terms of v
+\end{frame}
+\begin{frame}{PSIMREC}
+\begin{align*}
+    f &:= f_c &f(\vec{x}) &= c(\vec{x}) \tag{constr}\\
+    f &:= \Pi_i^n\;\;& f(x_1,..,x_n) &= x_i  \tag{proj}\\
+    f &:= h \circ (g_1,..,g_k) &f(\vec{x}) &= h(g_1(\vec{x}),..,g_k(\vec{x})) \tag{comp}\\
+    f &:= case((g_i)_i)& f(c_i(\vec{x}), \vec{y}) &=  g_i(\vec{x}, \vec{y}) \tag{case}  
+\end{align*}
+\begin{gather*}
+    f_j := psimrec((h_{ij})_{ij}, (\vec{\pi}_{ijklzw})_{ijklzw})_j  \tag{p-rec}
+\end{gather*}
+    \begin{block}{Definition}
+        The class \textbf{PSIMREC} is the smallest class of function containing (constr) (proj) and closed under (comp), (case) and (p-rec)
+    \end{block}
+\end{frame}
+\begin{frame}{PSIMREC vs SIMREC}
+    $\pi_i$ are SAFE functions
+\begin{align*}
+    f_i(nil,x,y) &= g_i(x,y) \tag{p-rec}\\
+    f_i(bin(z,w),x,y) &= h_i(z,w,x,y,f_1(z,\pi_1(x), \pi_2(y)),f_1(w,\pi_3(x), \pi_4(y)), \\ & \qquad \qquad \qquad \; \;f_1(w,\pi_5(x), \pi_6(y)),f_2(w,\pi_7(x), \pi_8(y)))\\
+    \text{-} \\
+    f_i(nil,x,y) &= g_i(x,y)\tag{rec}\\
+    f_i(bin(z,w),x,y) &= h_i(z,w,x,y,f_1(z,x, y),f_1(w,x, y), \\ & \qquad \qquad \qquad \; \;f_2(z,x, y),f_2(w,x, y))
+\end{align*}
+\end{frame}
+\begin{frame}{PSIMREC Soundness}
+    \begin{alertblock}{PSIMREC Soundness}
+        For every function $f \in PSIMREC(\mathbb{A})$, with $f \triangleright i_1,..,i_n \to k$.\\
+        For all inputs $\vec{v}$
+        a DAG representation of $f(\vec{v})$ is \textbf{computable in time polynomial} in $\|\vec{v}\|$
+    \end{alertblock}\pause
+    % \includegraphics[width=\textwidth]{DAG-tree.png}\tiny *
+    *Figure from \textit{Avanzini and Dal Lago "On sharing, Memoization and Polytime" (2018)}
+\end{frame}
+
+\begin{frame}{PSIMREC proof}
+    For every function $f \in PSIMREC(\mathbb{A})$:
+    \begin{block}{poly space}
+        it exists $p_f$ such that $\|f(\vec{v})\| \leq p_f(\|\vec{v}\|)$
+    \end{block}
+    \begin{block}<2->{function call time}
+        $(C,f(\vec{v})) \Downarrow_m (D,u)$ with $m=|FC^f_{\vec{v}} \setminus C|$
+    \end{block}
+    \begin{block}<3->{function call uper bound}
+        it exists $q_f$ such that $|FC^f_{\vec{v}}| \leq q_f(\|\vec{v}\|)$ 
+    \end{block}
+    \small *  $\|\vec{v}\|$ is the maximally shared size of $\vec{v}$ \\
+    **$FC^f_{\vec{v}}$ are the function call arising from $f(\vec{v})$
+\end{frame}
+
+
+\section{FaustML to PSIMREC}
+% \begin{frame}{FaustML transformations}
+%     \begin{center}
+%         \includegraphics[width=0.9\textwidth]{repport-diagram.excalidraw.png}
+%     \end{center}
+% \end{frame}
+
+\begin{frame}{FaustML Soundness}
+    \begin{alertblock}{FaustML Soundness}
+    For every function $f$ in any version of FaustML above, with $f \triangleright i_1,..,i_n \to k$.\\
+        For all inputs $\vec{v}$
+        a DAG representation of $f(\vec{v})$ is \textbf{computable in time polynomial} in $\|\vec{v}\|$
+     \end{alertblock}\pause
+    % \includegraphics[width=\textwidth]{DAG-tree.png}\tiny *
+    *Figure from \textit{Avanzini and Dal Lago "On sharing, Memoization and Polytime" (2018)}
+\end{frame}
+
+\begin{frame}{FaustML proof}
+    $\beta : $ FaustML nested function $\to$ FaustML version of PSIMREC
+    \begin{block}{Tiering preservation}
+        if $f \triangleright J \to k$ then $\beta(f) \triangleright J \to k$
+    \end{block}\pause
+
+    \begin{block}{value correctness}
+        if $\emptyset \vdash f(\vec{v}) \downarrow u$ then $\emptyset \vdash \beta(f)(\vec{v}) \downarrow u$
+    \end{block} \pause
+
+    \begin{block}{time correctness}
+        $FC^{\beta(f)}_{\vec{v}} \subseteq FC^{f}_{\vec{v}}$
+    \end{block}
+\end{frame}
+
+\section*{Conclusion}
+\begin{frame}{Conclusion}
+\begin{block}{PSIMREC}
+    We extended SIMREC with parameter substitution, which has practical interest in term of expressivity (ex: insert-sort)
+\end{block}\pause
+
+\begin{block}{FaustML}
+    We carried out the previous result in the much nicer syntax of FaustML, which makes it easier to use 
+\end{block}\pause
+
+\begin{block}{Implementation}
+    We implemented it in OCaml which gives an idea of how we could use this result in a compiler
+\end{block}
+\end{frame}
+
+\begin{frame}{Thanks}
+    \begin{center}
+        % \includegraphics[width=0.9\textwidth]{repport-diagram.excalidraw.png}
+    \end{center}
+\end{frame}
+
+\end{document}
