@@ -26,6 +26,7 @@
 \usepackage{booktabs}
 \usetikzlibrary{positioning}
 \newcommand{\mcl}{\mathcal{L}}
+\newcommand{\mce}{\mathcal{E}}
 \newcommand{\mcd}{\mathcal{D}}
 \newcommand{\mcc}{\mathcal{C}}
 \newcommand{\ra}{\rightarrow}
@@ -231,7 +232,7 @@ Laboratoire Méthodes Formelles}
 \begin{itemize}
     \item Decompose the term.
     \item Do the reduction.
-    \item Rebuild the term.
+    \item Recompose the term.
       \item Do all again until it tries to reduce a value.
   \end{itemize} 
 \end{frame}
@@ -283,6 +284,7 @@ $(v, n)$ & $\lambda.t $ &$\mcc$ & 1 & $\rsa_{fdbgc}$ & - & $\downarrow t$ & $\mc
     |\etat{(v, n),t,\mcc}_e| = |v|+|n|+|t|+|\mcc|
   \end{align*}
   \end{alertblock}
+  \pause
   \begin{block}{Remarks.}
    We are not counting the size of $e$ because it's constant. Moreover, when $(v,n)$ is empty ($-$), we set their size to 0. 
   \end{block}
@@ -290,287 +292,201 @@ $(v, n)$ & $\lambda.t $ &$\mcc$ & 1 & $\rsa_{fdbgc}$ & - & $\downarrow t$ & $\mc
 
 \section{Simulation of LS(G)C}
 \subsection*{Clean property}
-\begin{frame}{Clean function.}
-  
+\begin{frame}{Clean property.}
+  \begin{alertblock}{Definition}
+    We say that a term $t$ is clean if there are no explicit substitutions
+    that can be deleted through garbage collection. In other words, if $cl(t)$ has a derivation:
+    \begin{align*} 
+    &\infer{cl(x)}{}
+    &\infer{cl(\lambda x.t)}{cl(t)}\\
+    &\infer{cl(t~u)}{cl(t) & cl(u) }
+    &\infer{cl(t[x/u])}{cl(t)&cl(u)&x\in fv(t)}
+    \end{align*}
+  \end{alertblock}
 \end{frame}
-\begin{frame}{Base case: DB.}
+\begin{frame}{Theorem}
+  \begin{alertblock}{Theorem}
+    Let $t$ and $u$ be terms, if $t\ra u$ and t is clean then $u$ is clean.
+  \end{alertblock}
+  \pause
+  \begin{block}{Proof}
+    By induction over the derivation of $t\ra u$.
+  \end{block}
+  \begin{examples}
+    Let's take the case of DBGC
+  \end{examples}
 \end{frame}
-\begin{frame}{Base case: DB.}
+\begin{frame}{Base case: DBGC.}
+  \begin{block}{Lemma}
+  Let $\mathcal{L}$ be a substitution context, $t$ be a term and $x$ be a variable.
+    $\text{If}~x \in fv(\mathcal{L}[\lambda y.t])~\text{, then}~x \in fv(\mathcal{L}[t])$
+\end{block}
+\begin{alertblock}{Proof}
+  By induction over $\mathcal{L}$.
+  \begin{itemize}
+    \item \underbar{Case $\mathcal{L} = \square$~:} Immediate.
+      \pause
+    \item \underbar{Case $\mathcal{L}=\mathcal{L}_1[z/v]$~:}\\
+      \pause
+      Since $x\in fv(\mathcal{L}[\lambda y.t])~\text{i.e}~x \in fv((\mathcal{L}_1[\lambda y.t])[z/v])$, there are two cases:
+      \begin{itemize}
+        \pause
+        \item \underbar{Case $x\in fv(v)$~:} Trivially, $x \in fv((\mathcal{L}_1[t])[z/v]) \Leftrightarrow x\in fv(\mathcal{L}[t])$
+        \pause
+        \item \underbar{Cas $x\in fv(\mathcal{L}_1[\lambda y.t])\wedge x \neq z$~:}
+          By induction hypothesis, $x\in fv(\mathcal{L}_1[t])$.
+          We deduce that $x \in fv((\mathcal{L}_1[t])[z/v])~\text{i.e}~x\in fv(\mathcal{L}[t])$.
+      \end{itemize}
+  \end{itemize}
+\end{alertblock}
 \end{frame}
-\begin{frame}{Inductive case: GC.}
+
+\begin{frame}{Base case: DBGC.}
+  \begin{block}{Lemma}
+  Let $\mathcal{L}$ be a substitution context and $t$ be a term.
+   $\text{If}~\mathcal{L}[\lambda x.t]~\text{is clean, then}~\mathcal{L}[t]~\text{is clean.}$
+\end{block}
+\begin{alertblock}{Proof}
+  By induction over $\mathcal{L}$.
+  \begin{itemize}
+    \item \underbar{Case $\mathcal{L} = \square$~:} By definition of the cleaness property.
+    \item \underbar{Case $\mathcal{L}=\mathcal{L}_1[y/v]$~:}\\
+      Since $\mathcal{L}[\lambda x.t]~\text{is clean, then}~(\mathcal{L}_1[\lambda x.t])[y/v]~\text{is clean}$, 
+      we can deduce three things.
+      \begin{enumerate}
+        \item $\mathcal{L}_1[\lambda x.t]~\text{is clean. Therefore}~\mathcal{L}_1[t]$~is clean by induction hypothesis.
+        \item $y\in fv(\mathcal{L}_1[\lambda x.t])$ and by the lemma, $y \in fv(\mathcal{L}_1[t])$
+        \item $v$ is clean.
+      \end{enumerate}
+      Therefore $(\mathcal{L}_1[t])[y/v] = \mathcal{L}[t]$~is clean.
+  \end{itemize}
+\end{alertblock}
 \end{frame}
 
 \subsection*{FLAME behaviour}
 \begin{frame}{Important lemmas.}
-  
+  \begin{block}{Decomposition lemma}
+ Let $\mcc$, $\mcd$ be evaluation contexts and $t$ be a term.
+ $\etatz{-,\mcc[t], \mcd} \rsa^{*} \etatz{-,t,\mcc :: \mcd}$
+using $|\mcc|+|t|+|\mcd|$ space.
+  \end{block}
+  \begin{block}{Reduction lemma}
+ Let $\mathcal{D}$ be an evaluation context, $\mcl$ be a substitution context and $t$, $u$ be terms.
+  $\etatu{(u,n), \mcl[t], \mcd} \rightsquigarrow_{rdb}^k \etatu{(u,n+k), t, \mcl::\mcd}$
+  where $k$ is the length of $\mcl$,
+  using $|\mcd|+|t|+|\mcl|+|u| + |n+k|$ space.
+  \end{block}
+  \begin{block}{Recomposition lemma}
+  Let $\mathcal{C}$ and $\mathcal{D}$ be evaluation contexts and $t$ be a term.
+  $\mathcal{C}[t]~\text{is clean}~\Rightarrow \langle-,t,\mathcal{C}::\mathcal{D}\rangle_2 \rightsquigarrow^{*} \langle-,\mathcal{C}[t],\mathcal{D}\rangle_2$
+ using $|\mcc|+|t|+|\mcd|$ space.
+  \end{block}
 \end{frame}
 
  \subsection*{Simulation}
- \begin{frame}{Theorems.}  
+ \begin{frame}{Theorems.}
+   \begin{alertblock}{Theorem}
+  Let $t$ and $u$ be clean terms $\mcd$ be an evaluation context.
+  There exists a constant $k>0$ such that
+    $\text{if}~t \rightarrow u~\text{using space}~S\text{, then}$\\  
+    $\etat{-,t,\mcd}_0 \rightsquigarrow^{*} \etat{-,u,\mcd}_2~\text{using}~k\times S+|\mcd|~\text{space.}$
+\end{alertblock}
+\begin{block}{Proof}
+  By induction over the derivation of $t \ra u$.
+\end{block}
  \end{frame}
- \begin{frame}{Base case: DB.}
-   
+ \begin{frame}{Base case: DBGC.}
+   \begin{examples}
+ We have $\mcl[\lambda .t]~v \ra \mcl[t]$ assuming $x\notin fv(t)$. Therefore $S = |\mcl|+|v|+|t|+1$.\\
+      \begin{tabular}{@{}l c c @{}}
+        \toprule
+        transition & state & size \\
+        \midrule
+                   & $\etatz{-,\mcl[\lambda .t]~v,\mcd}$ & $|\mcd|+|v|+|\mcl|+|t|+1$\\
+        $\rsa_{db}$ & $ \etatu{(v,0), \mcl[ \lambda .t], \mcd}$ & $|\mcd| + |v| + |\mcl|+|t|+1$\\ 
+        $\rsa^{n}_{rdb}$ & $ \etatu{(v,n), \lambda .t ,\mcl::\mcd}$ & $|\mcd| + |v| + |\mcl|+|t|+1$\\
+        $\rsa_{fdbgc}$ & $ \etatd{-,\downarrow t ,\mcl::\mcd}$ & $|\mcd| + |\mcl|+|\downarrow t|$\\
+        $\rsa^{n}$ & $ \etatd{-, \mcl[\downarrow t],\mcd}$ & $|\mcd| + |\mcl|+|\downarrow t|$ \\ 
+        \bottomrule
+      \end{tabular}\\
+      Maximum space used: $S +|\mcd|$.
+   \end{examples}
  \end{frame}
- \begin{frame}{Inductive case: GC.}
-   
+ \begin{frame}{Inductive case: US.}
+\begin{examples}
+      We have $t[x/v] \rightarrow t'[x/v]$ assuming $x\in fv(t')$ and $t\rightarrow t'$. Therefore $S = S'+|v|$ with $S' = max(|t|, |t'|) = | t \rightarrow t'|$.\\
+      \begin{tabular}{@{}l c c c@{}}
+        \toprule
+        transition & état & taille \\
+        \midrule
+                   & $\etatz{-,t[x/v],\mcd}$ & $|\mcd|+|v|+|t|$\\
+        $\rightsquigarrow_{us}$ & $ \etatz{-, t, \square[x/v]:: \mcd}$ & $|\mcd| + |v| +|t|$\\ 
+        $\rightsquigarrow^{*}$ & $ \etatd{-, t' ,\square[x/v]::\mcd}$ & $|v| + |\mcd|+|t'|$& i.h \\
+        $\rightsquigarrow^{*}$ & $ \etatd{-, t'[x/v], \mcd}$ & $|v| + |\mcd|+|t'|$&$x \in fv(t')$\\
+        \bottomrule
+      \end{tabular}\\
+      By induction hypothesis, the transition from line two to line three is done using space $ k \times S' +|\mcd| + |v|$ avec $k\ge 1$. 
+      The maximum space used $k \times S' +|\mcd|+|v| \le k \times (S'+|v|)+|\mcd| = k \times S + |\mcd|$.
+\end{examples}
  \end{frame}
 
 \section{Simulation of FLAME}
-\begin{frame}{Needs.}
-  
+\begin{frame}{To Turing machines.}
+  \begin{block}{What we need}
+    \begin{itemize}
+      \item An encoding for the terms.
+      \item A representation for the different machine entries.
+      \item A way to compute the internal functions of FLAME.
+    \end{itemize}
+  \end{block}
 \end{frame}
+
 \begin{frame}{Encoding.}
+   \begin{alertblock}{Encoding of terms}
+    We define the encoding of a term $\mce$ into the alphabet $\{0,~1,~\lambda,~A,~\text{\textvisiblespace},~(,~),~S,~[,~]\}$ as following:
+\begin{align*}
+    \mce(x) &=x\\
+    \mce(\lambda .t) &=\lambda \mce(t) A\\
+    \mce(t~u)&=(\mce(t)\text{\textvisiblespace}\mce(u))\\
+    \mce(t[v])&=S\mce(t)[\mce(v)]
+\end{align*}
+  \end{alertblock}
+  \begin{block}{Remark}
+    We assume that $x$ is represented using de Bruijn indices.
+  \end{block}
 \end{frame}
-\begin{frame}{Internal functions of FLAME.}
-  
+
+\begin{frame}{Entries \& internal functions of FLAME.}
+  \begin{block}{Entries}
+    4-tape Turing machines.
+  \end{block}
+  \begin{block}{Internal functions}
+ \begin{itemize}
+   \item isFree
+   \item isValue
+   \item lift
+   \item red 
+  \end{itemize} 
+  \end{block}
 \end{frame}
 \begin{frame}{Theorem.}
+  \begin{alertblock}{Simulation}
+  There exists a Turing machine $\mathcal{M}$ and a constant $k$ such that if $\etatz{-, t, \square} \rsa^{*} \etatt{-, u, \square}$ using space $S$, then
+$\mathcal{M}~\bar{t} \ra^{*}~\bar{u}$ using space $k\times S$. 
+\end{alertblock}
 \end{frame}
 
 \section{Conclusion}
 \begin{frame}{Recap.}
+  \begin{itemize}
+    \pause
+    \item Defined LS(G)C with it's space measure.
+      \pause
+    \item Defined FLAME with it's space measure.
+      \pause
+    \item Showed that FLAME simulates LS(G)C with a linear space overhead.
+      \pause
+    \item Showed that Turing machines can simulate FLAME with a linear space overhead.
+  \end{itemize}
 \end{frame}
-% \subsection*{Internship}
-% \begin{frame}{Internship Environnement}
-%
-% \end{frame}
-%
-%
-% \begin{frame}{Initial Goal}
-%     \begin{alertblock}{Initial goal}
-%         Characterize time complexity classes using FaustML 
-%     \end{alertblock}\pause
-%     \begin{block}{Definition: FaustML}
-%         A function in FaustML follows the following grammar: 
-%     \begin{align*}
-%         \text{ Function } f(x_1,..,x_n) &= e \\
-%         \text{ Expression } \qquad \quad e ::&= x \\
-%         & |\; let \; x  =  e_1 \; in \; e_2 \\
-%         & |\; c(e_1,..,e_n) \\
-%         & |\; f(e_1,..,e_n) \\
-%         & |\; match \; e \; with \; (c_i(x_1,..,x_n) \to e_i)_i \\
-%     \end{align*}
-%     \end{block}
-% \end{frame}
-%
-% \subsection*{history of ICC}
-%
-% \begin{frame}{ICC's dream}
-%     \small ICC = Implicit Computational Complexity\\
-%
-%     % \includegraphics[width= 0.9\textwidth]{mygcc.png}
-% \end{frame}
-%
-% \begin{frame}{ICC "rough" picture}
-%
-%     % \includegraphics[width=0.9\textwidth]{ICC-full-picture.png}
-% \end{frame}
-%
-% \begin{frame}[fragile]{THE ICC's Question}
-%     \centering \textbf{what is wrong with this \st{picture} program?} 
-%
-%     \begin{lstlisting}
-%     let rec twice(n) = match n with 
-%         | Z $\to$ Z 
-%         | S(m) $\to$ S(S(twice(m)))
-%     let rec exp(n) = match n with 
-%         | Z $\to$ S(Z)
-%         | S(m) $\to$ twice(exp(m))
-%     \end{lstlisting}
-% \end{frame}
-%
-% \begin{frame}[fragile]{THE ICC's Question}
-%     \centering \textbf{what is wrong with this \st{picture} program?} 
-%     \begin{lstlisting}
-%     let rec twice(n) = match n with 
-%         | Z $\to$ Z 
-%         | S(m) $\to$ S(S(twice(m)))
-%     let rec exp(n) = match n with 
-%         | Z $\to$ S(Z)
-%         | S(m) $\to$ twice(exp(m))
-%     \end{lstlisting}
-%     In the data-tiering branch, the \textbf{composition of twice and exp} is the problem.
-% \end{frame}
-%
-% \section{data-tiering}
-% \begin{frame}{Data-tiering}
-%     \begin{block}{tiering}
-%         data-tiering is affecting to each expressions and functions integers (called \textbf{tier}) and add constraints to them.
-%         It is stated as a \textbf{typing} judgment $f \triangleright i_1,..,i_n \to k$
-%     \end{block} \pause
-%     for example the composition propagate the tiers:
-%     \begin{gather*}
-%         \inference{f \triangleright p \to k \quad g \triangleright i \to p}{f \circ g \triangleright i \to k}
-%     \qquad \inference{f \text{ recursive } &...& \color{red}{p > k}}{f \triangleright p \to k}
-%     \end{gather*}
-% \end{frame}
-%
-% % \begin{frame}[fragile]{Data-tiering's problem}
-% %     Data-tiering is unable to accept the usual implementation of insert sort, because it have the same constraint problem
-% %     \begin{lstlisting}
-% %     (*insert: i,j->j with i>j*)
-% %     let rec insert(l,x) = ...
-% %     (*sort: p->k ERROR *)
-% %     let rec sort(l) = match l with 
-% %         | Nil $\to$ Nil 
-% %         | Cons(x,l) $\to$ insert(sort(l),x) 
-% %     \end{lstlisting}
-% % \end{frame}
-%
-% \begin{frame}{Data-tiering's problem}
-%     % \includegraphics[scale=0.1]{same-picture-ICC.png}
-% \end{frame}
-%
-% \begin{frame}[fragile]{Data-tiering solution?}
-% If we use a fuel, we can bypass this problem:
-% \begin{lstlisting}
-% let rec insert(n,l,x) = ... (*n is a fuel*)
-%
-% let rec sort(n,l) = match n with 
-%   | Z $\to$ l
-%   | S(m) $\to$ match l with 
-%     | Nil $\to$ Nil 
-%     | Cons(x,l1) $\to$ insert(m,sort(m,tl(l)),x)
-%               (* require parameter subst *)
-% \end{lstlisting}
-%
-% But now we need our characterization to allow parameter substitution, 
-% which was not the case of SIMREC from Avanzini and Dal Lago 
-%
-% \end{frame}
-%
-% \section{SIMREC parameter subst}
-%
-% \begin{frame}{Extension to SIMREC}
-%     SIMREC structure (from Avanzini and Dal Lago):
-% \begin{align*}
-%     f &:= f_c & f() &= c() \label{null-constr0} \tag{0-constr}\\
-%     f &:= f_c &f(\vec{x}) &= c(\vec{x}) \label{constr0} \tag{constr}\\
-%     f &:= \Pi_i^n\;\;& f(x_1,..,x_n) &= x_i \label{proj0} \tag{proj}\\
-%     f &:= h \circ (g_1,..,g_k) &f(\vec{x}) &= h(g_1(\vec{x}),..,g_k(\vec{x})) \label{comp0} \tag{comp}\\
-%     f &:= case((g_i)_i)& f(c_i(\vec{x}), \vec{y}) &=  g_i(\vec{x}, \vec{y}) \label{case0} \tag{case}  \\
-%     f_j &:= simrec((h_{ij})_{ij})_j & f_j(c_i(\vec{x}), \vec{y}) &=  h_{ij}(\vec{x}, \vec{y}, f_1(x_1, \vec{y})..f_1(x_n, \vec{y}).. f_k(x_n, \vec{y})) \label{rec0} \tag{rec}
-% \end{align*}\pause
-%     \begin{block}{Definition}
-%         The class \textbf{SAFE} is the smallest class of function containing (0-constr) (proj) and closed under (comp) and (case) 
-%     \end{block}
-% \end{frame}
-% \begin{frame}[fragile]{Safe functions}
-%     \begin{example}
-%         \texttt{tl} is a SAFE function:
-%     \begin{lstlisting}
-%         tl(l) = match l with 
-%             | Nil $\to$ Nil 
-%             | Cons(x,l) $\to$ l
-%     \end{lstlisting}
-%     \end{example}    \pause
-%
-%     \begin{alertblock}{safe function's crutial property}
-%         if $\pi \in SAFE$ then for any values $\vec{v}$: $STs(\pi(\vec{v})) \subseteq STs(\vec{v}) \cup E$
-%     \end{alertblock}
-%     \small STs(v) are the sub-terms of v
-% \end{frame}
-% \begin{frame}{PSIMREC}
-% \begin{align*}
-%     f &:= f_c &f(\vec{x}) &= c(\vec{x}) \tag{constr}\\
-%     f &:= \Pi_i^n\;\;& f(x_1,..,x_n) &= x_i  \tag{proj}\\
-%     f &:= h \circ (g_1,..,g_k) &f(\vec{x}) &= h(g_1(\vec{x}),..,g_k(\vec{x})) \tag{comp}\\
-%     f &:= case((g_i)_i)& f(c_i(\vec{x}), \vec{y}) &=  g_i(\vec{x}, \vec{y}) \tag{case}  
-% \end{align*}
-% \begin{gather*}
-%     f_j := psimrec((h_{ij})_{ij}, (\vec{\pi}_{ijklzw})_{ijklzw})_j  \tag{p-rec}
-% \end{gather*}
-%     \begin{block}{Definition}
-%         The class \textbf{PSIMREC} is the smallest class of function containing (constr) (proj) and closed under (comp), (case) and (p-rec)
-%     \end{block}
-% \end{frame}
-% \begin{frame}{PSIMREC vs SIMREC}
-%     $\pi_i$ are SAFE functions
-% \begin{align*}
-%     f_i(nil,x,y) &= g_i(x,y) \tag{p-rec}\\
-%     f_i(bin(z,w),x,y) &= h_i(z,w,x,y,f_1(z,\pi_1(x), \pi_2(y)),f_1(w,\pi_3(x), \pi_4(y)), \\ & \qquad \qquad \qquad \; \;f_1(w,\pi_5(x), \pi_6(y)),f_2(w,\pi_7(x), \pi_8(y)))\\
-%     \text{-} \\
-%     f_i(nil,x,y) &= g_i(x,y)\tag{rec}\\
-%     f_i(bin(z,w),x,y) &= h_i(z,w,x,y,f_1(z,x, y),f_1(w,x, y), \\ & \qquad \qquad \qquad \; \;f_2(z,x, y),f_2(w,x, y))
-% \end{align*}
-% \end{frame}
-% \begin{frame}{PSIMREC Soundness}
-%     \begin{alertblock}{PSIMREC Soundness}
-%         For every function $f \in PSIMREC(\mathbb{A})$, with $f \triangleright i_1,..,i_n \to k$.\\
-%         For all inputs $\vec{v}$
-%         a DAG representation of $f(\vec{v})$ is \textbf{computable in time polynomial} in $\|\vec{v}\|$
-%     \end{alertblock}\pause
-%     % \includegraphics[width=\textwidth]{DAG-tree.png}\tiny *
-%     *Figure from \textit{Avanzini and Dal Lago "On sharing, Memoization and Polytime" (2018)}
-% \end{frame}
-%
-% \begin{frame}{PSIMREC proof}
-%     For every function $f \in PSIMREC(\mathbb{A})$:
-%     \begin{block}{poly space}
-%         it exists $p_f$ such that $\|f(\vec{v})\| \leq p_f(\|\vec{v}\|)$
-%     \end{block}
-%     \begin{block}<2->{function call time}
-%         $(C,f(\vec{v})) \Downarrow_m (D,u)$ with $m=|FC^f_{\vec{v}} \setminus C|$
-%     \end{block}
-%     \begin{block}<3->{function call uper bound}
-%         it exists $q_f$ such that $|FC^f_{\vec{v}}| \leq q_f(\|\vec{v}\|)$ 
-%     \end{block}
-%     \small *  $\|\vec{v}\|$ is the maximally shared size of $\vec{v}$ \\
-%     **$FC^f_{\vec{v}}$ are the function call arising from $f(\vec{v})$
-% \end{frame}
-%
-%
-% \section{FaustML to PSIMREC}
-% % \begin{frame}{FaustML transformations}
-% %     \begin{center}
-% %         \includegraphics[width=0.9\textwidth]{repport-diagram.excalidraw.png}
-% %     \end{center}
-% % \end{frame}
-%
-% \begin{frame}{FaustML Soundness}
-%     \begin{alertblock}{FaustML Soundness}
-%     For every function $f$ in any version of FaustML above, with $f \triangleright i_1,..,i_n \to k$.\\
-%         For all inputs $\vec{v}$
-%         a DAG representation of $f(\vec{v})$ is \textbf{computable in time polynomial} in $\|\vec{v}\|$
-%      \end{alertblock}\pause
-%     % \includegraphics[width=\textwidth]{DAG-tree.png}\tiny *
-%     *Figure from \textit{Avanzini and Dal Lago "On sharing, Memoization and Polytime" (2018)}
-% \end{frame}
-%
-% \begin{frame}{FaustML proof}
-%     $\beta : $ FaustML nested function $\to$ FaustML version of PSIMREC
-%     \begin{block}{Tiering preservation}
-%         if $f \triangleright J \to k$ then $\beta(f) \triangleright J \to k$
-%     \end{block}\pause
-%
-%     \begin{block}{value correctness}
-%         if $\emptyset \vdash f(\vec{v}) \downarrow u$ then $\emptyset \vdash \beta(f)(\vec{v}) \downarrow u$
-%     \end{block} \pause
-%
-%     \begin{block}{time correctness}
-%         $FC^{\beta(f)}_{\vec{v}} \subseteq FC^{f}_{\vec{v}}$
-%     \end{block}
-% \end{frame}
-%
-% \section*{Conclusion}
-% \begin{frame}{Conclusion}
-% \begin{block}{PSIMREC}
-%     We extended SIMREC with parameter substitution, which has practical interest in term of expressivity (ex: insert-sort)
-% \end{block}\pause
-%
-% \begin{block}{FaustML}
-%     We carried out the previous result in the much nicer syntax of FaustML, which makes it easier to use 
-% \end{block}\pause
-%
-% \begin{block}{Implementation}
-%     We implemented it in OCaml which gives an idea of how we could use this result in a compiler
-% \end{block}
-% \end{frame}
-%
-% \begin{frame}{Thanks}
-%     \begin{center}
-%         % \includegraphics[width=0.9\textwidth]{repport-diagram.excalidraw.png}
-%     \end{center}
-% \end{frame}
-
 \end{document}
