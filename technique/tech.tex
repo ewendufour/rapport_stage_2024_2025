@@ -23,10 +23,17 @@
 \newcommand{\etatz}[1]{\langle #1 \rangle_0}
 \newcommand{\etatu}[1]{\langle #1 \rangle_1}
 \newcommand{\etatd}[1]{\langle #1 \rangle_2}
+\newcommand{\etatt}[1]{\langle #1 \rangle_3}
+\newcommand{\mcd}{\mathcal{D}}
+\newcommand{\mcc}{\mathcal{C}}
+\newcommand{\mcl}{\mathcal{L}}
 \newcommand{\mtd}{\mathcal{D}}
 \newcommand{\mtc}{\mathcal{C}}
 \newcommand{\mtl}{\mathcal{L}}
-
+\newcommand{\da}{\downarrow}
+\newcommand{\ua}{\uparrow}
+\newcommand{\ra}{\rightarrow}
+\newcommand{\rsa}{\rightsquigarrow}
 
 
 \title{Étude d'une mesure d'espace pour le lambda calcul}
@@ -37,12 +44,12 @@
 
 \maketitle
 
-\begin{abstract}
-  Nous sommes beaux Quelque chose de bien orthographiée.
-\end{abstract}
-
-\tableofcontents
-\section{Introduction}
+% \begin{abstract}
+%   Nous sommes beaux Quelque chose de bien orthographiée.
+% \end{abstract}
+%
+% \tableofcontents
+% \section{Introduction}
 \section{Le Linear Substitution Calculus}
 
 \begin{definition}[Linear Substitution Calculus]
@@ -53,12 +60,14 @@ Les termes du LSC sont donnés par la grammaire~:
 Les règles de réduction sont~:
 \begin{center}
 \begin{tabular}{l l l l }
-$(\lambda x.t)Lu$ &$\mapsto_{d\beta}$ &$t[x / u]L$ & \\
+  $\mcl[\lambda x.t]u$ &$\mapsto_{d\beta}$ &$\mcl[t[x / u]]$ & \\
 $\mathcal{C}\llbracket x \rrbracket [x / u]$ &$\mapsto_{ls}$ &$\mathcal{C}\llbracket u \rrbracket [x / u]$ & \\
 $t[x / u]$ &$\mapsto_{gc}$ &$t$ & if $x\notin fv(t)$
 \end{tabular}
 \end{center}
- où $L$ est une liste de substitutions possiblement vide, $\mathcal{C}$ est un contexte et $fv(t)$ dénote les variables libres du terme $t$.
+où $\mcc$ et $\mcl$ sont des contextes construits par les grammaires~:
+\[\mcl ::= \square~|~\mcl[x/t]\]
+\[\mcc ::= \square~|~\mcc[x/t]~|~t[x/\mcc]~|~\mcc~t~|~t~\mcc~|~\lambda x.\mcc\]  
 \end{definition}
 \begin{definition}[Free variables]
 \begin{align*}
@@ -69,7 +78,7 @@ $t[x / u]$ &$\mapsto_{gc}$ &$t$ & if $x\notin fv(t)$
 \end{align*}
 \end{definition}
 
-\section{Le LSC en appel par valeur}
+\section{LS(G)C}
 Nous considérons les termes suivant comme des valeurs~:
 \begin{align*}
     v ::= (\lambda x.t)~|~v[x/t]
@@ -84,9 +93,9 @@ Nous considérons les termes suivant comme des valeurs~:
   \mathcal{L} ::= \square~|~\mathcal{L}[x/v]
 \end{align*}
 \end{definition}
-\begin{figure}[!h]
-    \centering
-    \begin{align*}
+
+\begin{definition}[Règles de réduction de LS(G)C nommé]
+      \begin{align*}
     &\infer[LA]{t~u\rightarrow t'~u}{t \rightarrow t'}
  &\infer[RA]{v~t\rightarrow v~t'}{t \rightarrow t'}\\
 &\infer[GC]{t[x/u]\rightarrow t'}{t \rightarrow t' & x \notin fv(t') }
@@ -96,8 +105,35 @@ Nous considérons les termes suivant comme des valeurs~:
 &\infer[DB]{\mathcal{L}[\lambda x.t]~v \rightarrow \mathcal{L}[t[x/v]]}{x\in fv(t)}
 &\infer[DBGC]{\mathcal{L}[\lambda x.t]~v \rightarrow \mathcal{L}[t]}{x\notin fv(t)}
 \end{align*}
-    \caption{Règles de réduction du WCBVLSC}
-\end{figure}
+\end{definition}
+
+\begin{definition}[Règles de réduction de LS(G)C indicé]
+      \begin{align*}
+    &\infer[LA]{t~u\rightarrow t'~u}{t \rightarrow t'}
+ &\infer[RA]{v~t\rightarrow v~t'}{t \rightarrow t'}\\
+&\infer[GC]{t[u]\rightarrow \da t'}{t \rightarrow t' & 0 \notin fv(t') }
+&\infer[US]{t[u]\rightarrow t'[u]}{t \rightarrow t' & 0 \in fv(t')}\\
+&\infer[LS]{\mathcal{C}\llbracket n \rrbracket [u]\rightarrow \mathcal{C}\llbracket \ua^{n+1} u \rrbracket [u]}{0 \in fv(\mathcal{C}\llbracket \ua^{n+1} u \rrbracket)}
+&\infer[LSGC]{\mathcal{C}\llbracket n \rrbracket [u]\rightarrow \da \mathcal{C}\llbracket \ua^{n+1} u \rrbracket}{0 \notin fv(\mathcal{C}\llbracket \ua^{n+1} u \rrbracket) }\\
+&\infer[DB]{\mathcal{L}[\lambda t]~v \rightarrow \mathcal{L}[t[\ua^{k} v]]}{0 \in fv(t) & k= len(dec(\mcl))}
+&\infer[DBGC]{\mathcal{L}[\lambda t]~v \rightarrow \mathcal{L}[\da t]}{0 \notin fv(t)}
+\end{align*}
+où $\da t$ représente le décrément de $1$ des variables libres de $t$, $\ua$ leur incrément de $1$, 
+$dec$ est la fonction qui prend un contexte et le décompose en parties atomiques et $len$ est la fonction qui calcule la longueure de la décomposition.
+\end{definition}
+
+
+
+\begin{definition}[Taille d'un terme]
+  \begin{align*}
+    |x| &= |dB(x)|\\
+    |\lambda x.t| &= |t| + 1\\
+    |t~u| = |t[x/u]| &= |t| + |u|
+  \end{align*}
+\end{definition}
+\begin{remark}
+  Nous étendons trivialement cette définitions au différents contextes.
+\end{remark}
 
 \begin{definition}[Propreté]
 \begin{align*}
@@ -109,30 +145,8 @@ Nous considérons les termes suivant comme des valeurs~:
 Un terme $t$ est dit propre si et seulement si $cl(t)$ possède une dérivation.
 \end{definition}
 
-\begin{definition}[Taille d'un terme]
-  \begin{align*}
-    |x| &= |dB(x)|\\
-    |\lambda x.t| &= |t| + 1\\
-    |t~u| = |t[x/u]| &= |t| + |u|
-  \end{align*}
-  Nous considérons ici que les variables d'un même terme on toutes la même taille, celle de l'indice de de Bruijn le plus grand.
-\end{definition}
-
-\begin{definition}[Taille d'un Contexte]
-  \begin{align*}
-    |\square| &= 0\\
-    |\mtc~t| &= |\mtc|+|t|\\
-    |t~\mtc| &= |\mtc|+|t|\\
-    |\mtc[x/t]| &= |\mtc| +|t|
-  \end{align*}
-  Nous étendons cette propriété au contextes d'application.
-\end{definition}
-
-\begin{remark}
-  Nous pouvons constater que $|\mtc[t]| = |\mtc|+|t|$.
-\end{remark}
-
-\subsection{Propreté du LSC en appel par valeur}
+\subsection{Propreté de LS(G)C}
+A des fins de clareté nous utilisons ici la version nommée des règles de réduction. Nous pensons que le travail à suivre peut être effectué sur la version indicée d'une manière analogue.
 \begin{lemma}[Préservation des variables libres]
   \label{lemmapresfv}
   Soient $\mathcal{C}$ un contexte de d'évaluation, $x$ et $y$ des variables et t un terme.
@@ -302,22 +316,41 @@ Par induction sur la forme de $\mathcal{C}$
   \end{itemize}
 \end{proof}
 
+\section{FLAME}
+FLAME est une machine abstraite qui implante la stratégie d'appel par valeur pour les termes du LSC. 
+Un état de FLAME se décrit par un triplet annoté de la forme $\etat{(v,n),t,\mcc}_e$ où~:
+\begin{itemize}
+  \item $t$ représente le terme en train d'être évalué.
+  \item $\mcc$ est une pile de contexte d'évaluation.
+    \item $(v, n)$ contient optionnellement l'argument d'une application et sa \og distance\fg~par rapport à l'abstraction.
+    \item $e$ est un nombre qui indique la phase de fonctionnement de FLAME.
+    \end{itemize} 
+Toutes les transitions de FLAME sont décrites dans la figure~\ref{FLAME} en annexe.
+
+\begin{definition}[Taille d'un état de FLAME]
+\begin{align*}
+    |\etat{(v,n), t, \mcc}_e| = |t| + |v| + |n| + |\mcc|
+\end{align*}  
+\end{definition}
+
+
 \subsection{Simulation du LSC en appel par valeur par FLAME}
-\begin{lemma}[Plongeon évaluation]
+Dans la suite de ce travail, nous utilisons la version indicée de LS(G)C.
+\begin{lemma}[Décomposition]
   \label{lemmaplouf}
   Soient $\mathcal{C}$, $\mathcal{D}$ des contextes d'évaluation et $t$ un terme.
 \[\langle -,\mathcal{C}[t], \mathcal{D}\rangle_0 \rightsquigarrow^* \langle -,t,\mathcal{C} :: \mathcal{D}\rangle_0\]
-en utilisant un espace $|\mtc|+|t|+|\mtd|$
+en utilisant un espace $|\mcc|+|t|+|\mcd|$
 \end{lemma}
 \begin{proof}
   Par induction sur la forme de $\mathcal{C}$.
   \begin{itemize}
     \item \underbar{Cas $\mathcal{C} = \square$~:} immédiat.\\
-    \item \underbar{Cas $\mathcal{C} = \mathcal{C}_1[x/v]$~:}\\
+    \item \underbar{Cas $\mathcal{C} = \mathcal{C}_1[v]$~:}\\
   \begin{align*}
-    \langle -, \mathcal{C}[t], \mathcal{D}\rangle_0 = &\langle -, \mathcal{C}_1[t][x/v], \mathcal{D}\rangle_0 \\
-    \rightsquigarrow_{us} &\langle -, \mathcal{C}_1[t], \square[x/v]:: \mathcal{D}\rangle_0 \\
-    \rightsquigarrow^* &\langle -, t, \mathcal{C}_1:: \square[x/v]:: \mathcal{D}\rangle_0 \quad \text{Par hypothèse d'induction.}
+    \langle -, \mathcal{C}[t], \mathcal{D}\rangle_0 = &\langle -, \mathcal{C}_1[t][v], \mathcal{D}\rangle_0 \\
+    \rightsquigarrow_{us} &\langle -, \mathcal{C}_1[t], \square[v]:: \mathcal{D}\rangle_0 \\
+    \rightsquigarrow^* &\langle -, t, \mathcal{C}_1:: \square[v]:: \mathcal{D}\rangle_0 \quad \text{Par hypothèse d'induction.}
   \end{align*}
     \item \underbar{Cas $\mathcal{C} = \mathcal{C}_1~u$~:}\\
   \begin{align*}
@@ -339,21 +372,21 @@ en utilisant un espace $|\mtc|+|t|+|\mtd|$
   \label{lemmaportugal}
   Soient $\mathcal{C}$ et $\mathcal{D}$ des contextes d'évaluation et $t$ un terme.
   \[\mathcal{C}[t]~\text{propre}~\Rightarrow \langle-,t,\mathcal{C}::\mathcal{D}\rangle_2 \rightsquigarrow^* \langle-,\mathcal{C}[t],\mathcal{D}\rangle_2\]
-en utilisant un espace $|\mtc|+|t|+|\mtd|$
+en utilisant un espace $|\mcc|+|t|+|\mcd|$
 \end{lemma}
 \begin{proof}
   Par induction sur la forme de $\mathcal{C}$.
   \begin{itemize}
     \item \underbar{Cas $\mathcal{C} = \square$~:} immédiat.
-    \item \underbar{Cas $\mathcal{C} = \mathcal{C}_1[x/v]$~:}\\
+    \item \underbar{Cas $\mathcal{C} = \mathcal{C}_1[v]$~:}\\
       Nous avons
-       $ \mathcal{C}[t]~\text{propre,}~\text{c.à.d}~\mathcal{C}_1[t][x/v]~\text{propre, ce qui nous donne}~x\in fv(\mathcal{C}_1[t])~\wedge~\mathcal{C}_1[t]~$propre.
+       $ \mathcal{C}[t]~\text{propre,}~\text{c.à.d}~\mathcal{C}_1[t][v]~\text{propre, ce qui nous donne}~0\in fv(\mathcal{C}_1[t])~\wedge~\mathcal{C}_1[t]~$propre.
       Et par conséquent~:
       \begin{align*}
-        \langle -, t, \mathcal{C} :: \mathcal{D}\rangle_2 = &\langle -, t, \mathcal{C}_1[x/v]:: \mathcal{D}\rangle_2 \\
-        = &\langle -, t, \mathcal{C}_1:: \square[x/v] :: \mathcal{D}\rangle_2 \\
-        \rightsquigarrow^* &\langle -, \mathcal{C}_1[t], \square[x/v]:: \mathcal{D}\rangle_2 \quad &\text{Par hypothèse d'induction.}\\
-        \rightsquigarrow_{bsubst} &\langle -, \mathcal{C}_1[t][x/v], \mathcal{D}\rangle_2 \quad &\text{Car}~x\in fv(\mathcal{C}_1[t])
+        \langle -, t, \mathcal{C} :: \mathcal{D}\rangle_2 = &\langle -, t, \mathcal{C}_1[v]:: \mathcal{D}\rangle_2 \\
+        = &\langle -, t, \mathcal{C}_1:: \square[v] :: \mathcal{D}\rangle_2 \\
+        \rightsquigarrow^* &\langle -, \mathcal{C}_1[t], \square[v]:: \mathcal{D}\rangle_2 \quad &\text{Par hypothèse d'induction.}\\
+        \rightsquigarrow_{bsubst} &\langle -, \mathcal{C}_1[t][v], \mathcal{D}\rangle_2 \quad &\text{Car}~0\in fv(\mathcal{C}_1[t])
       \end{align*}
     \item \underbar{Cas $\mathcal{C} = \mathcal{C}_1~u$~:}\\
       Nous avons $\mathcal{C}[t]~\text{propre, c'est à dire}~\mathcal{C}_1[t]~u~\text{propre. Cela force}~\mathcal{C}_1[t]~$propre.
@@ -372,136 +405,148 @@ en utilisant un espace $|\mtc|+|t|+|\mtd|$
 
 \begin{lemma}[Plongeon substitution]
   \label{lemmaplouf2}
-  Soient $\mathcal{D}$ un contexte d'évaluation, $\mtl$ un contexte de substitution et $t$, $u$ des termes.
-  \[ \etatu{u, \mtl[t], \mtd} \rightsquigarrow_{rdb}^* \etatu{u, t, \mtl::\mtd} \]
-en utilisant un espace $|\mtd|+|t|+|\mtl|+|u|$
+  Soient $\mathcal{D}$ un contexte d'évaluation, $\mcl$ un contexte de substitution et $t$, $u$ des termes.
+  \[ \etatu{(u,n), \mcl[t], \mcd} \rightsquigarrow_{rdb}^k \etatu{(u,n+k), t, \mcl::\mcd} \]
+  où $k$ est la longueur de la décomposition de $\mcl$,
+en utilisant un espace $|\mcd|+|t|+|\mcl|+|u| + |n+k|$
 \end{lemma}
 \begin{proof}
   Par induction sur la forme de $\mathcal{L}$.
   \begin{itemize}
     \item \underbar{Cas $\mathcal{L} = \square$~:} immédiat.\\
-    \item \underbar{Cas $\mathcal{L} = \mathcal{L}_1[x/v]$~:}\\
+    \item \underbar{Cas $\mathcal{L} = \mathcal{L}_1[v]$~:}\\
   \begin{align*}
-    \langle u, \mathcal{L}[t], \mathcal{D}\rangle_1 = &\langle u, \mathcal{L}_1[t][x/v], \mathcal{D}\rangle_1 \\
-    \rightsquigarrow_{rdb} &\langle u, \mathcal{L}_1[t], \square[x/v]:: \mathcal{D}\rangle_1 \\
-    \rightsquigarrow^*_{rdb} &\langle u, t, \mathcal{L}_1:: \square[x/v]:: \mathcal{D}\rangle_1 \quad \text{Par hypothèse d'induction.}\\
- = &\etatu{u, t, \mtl_1[x/v]::\mtd} = \etatu{u, t, \mtl::\mtd}
+    \langle (u,n), \mathcal{L}[t], \mathcal{D}\rangle_1 = &\langle u, \mathcal{L}_1[t][v], \mathcal{D}\rangle_1 \\
+    \rightsquigarrow_{rdb} &\langle (u,n+1), \mathcal{L}_1[t], \square[v]:: \mathcal{D}\rangle_1 \\
+  \rightsquigarrow^{k-1}_{rdb} &\langle (u,n+k), t, \mathcal{L}_1:: \square[v]:: \mathcal{D}\rangle_1 \quad \text{Par hypothèse d'induction.}\\
+ = &\etatu{(u,n+k), t, \mcl_1[v]::\mcd} = \etatu{(u,n+k), t, \mcl::\mcd}
   \end{align*}
   \end{itemize}
   L'espace utilisé se voit sur les réductions.
 \end{proof}
 
 \begin{lemma}[Simulation raisonnable]
-  Soient $t$ et $u$ des termes propres et $\mtd$ un contexte d'évaluation.
+  \label{lem:sim}
+  Soient $t$ et $u$ des termes propres et $\mcd$ un contexte d'évaluation.
   \[
-    \text{Si}~t \rightarrow u~\text{avec un espace}~S~\text{, alors }~\exists k \ge 1, \etat{-,t,\mtd}_0 \rightsquigarrow^* \etat{-,u,\mtd}_2~\text{avec un espace}~k\times S+|\mtd|
+    \text{Si}~t \rightarrow u~\text{avec un espace}~S~\text{, alors }~\etat{-,t,\mcd}_0 \rightsquigarrow^* \etat{-,u,\mcd}_2~\text{avec un espace maximum}~2 \times S+|\mcd|
   \]
 \end{lemma}
 \begin{proof}
   Par induction sur la dérivation de $t\rightarrow u$.
   \begin{itemize}
-    \item \underbar{Cas LS~:} Nous avons $\mtc\llbracket x\rrbracket[x/v]\rightarrow \mtc[v][x/v]$ sous hypothèse que $x\in fv(\mtc[v])$. Donc $S = |\mtc|+2\times|v|$.\\
+    \item \underbar{Cas LS~:} Nous avons $\mtc\llbracket n\rrbracket[v]\rightarrow \mcc[\ua^{n+1} v][v]$ sous hypothèse que $0\in fv(\mcc[\ua^{n+1} v])$. Donc $S = |\mcc|+|v| + max(|n|, |\ua^{n+1} v|)$.\\
       \begin{tabular}{@{}l c c c@{}}
         \toprule
         transition & état & taille & justification\\
         \midrule
-                   & $\etatz{-,\mtc\llbracket x\rrbracket[x/v],\mtd}$ & $|\mtd|+|v|+|\mtc|+|x|$\\
-        $\rightsquigarrow_{us}$ & $ \etatz{-, \mtc\llbracket x \rrbracket, \square[x/v]::\mtd}$ & $|\mtd| + |v| + |\mtc|+|x|$\\ 
-        $\rightsquigarrow^*$ & $ \etatz{-, x ,\mtc:: \square[x/v]::\mtd}$ & $|\mtd| + |v| + |\mtc|+|x|$& Lemme \ref{lemmaplouf}\\
-        $\rightsquigarrow_{ls}$ & $ \etatd{-, v ,\mtc:: \square[x/v]::\mtd}$ & $|\mtd| + |v| + |\mtc|+|v|$\\
-        $\rightsquigarrow^*$ & $ \etatd{-, \mtc[v], \square[x/v]::\mtd}$ & $|\mtd| + |v| + |\mtc|+|v|$ &Lemme \ref{lemmaportugal}\\ 
-        $\rightsquigarrow_{bsubst}$ & $ \etatd{-, \mtc[v][x/v], \mtd}$ & $|\mtd| + |v| + |\mtc|+|v|$&$x\in fv(\mtc[v])$\\ 
+                   & $\etatz{-,\mcc\llbracket n\rrbracket[v],\mcd}$ & $|\mcd|+|v|+|\mcc|+|n|$\\
+        $\rightsquigarrow_{us}$ & $ \etatz{-, \mcc\llbracket n \rrbracket, \square[v]::\mcd}$ & $|\mcd| + |v| + |\mcc|+|n|$\\ 
+        $\rightsquigarrow^*$ & $ \etatz{-, n ,\mcc:: \square[v]::\mcd}$ & $|\mcd| + |v| + |\mcc|+|n|$& Lemme \ref{lemmaplouf}\\
+        $\rightsquigarrow_{ls}$ & $ \etatd{-, \ua^{n+1} v ,\mcc:: \square[v]::\mcd}$ & $|\mcd| + |\ua^{n+1} v| + |\mcc|+|v|$\\
+        $\rightsquigarrow^*$ & $ \etatd{-, \mcc[\ua^{n+1} v], \square[v]::\mcd}$ & $|\mcd| + |\ua^{n+1} v| + |\mcc|+|v|$ &Lemme \ref{lemmaportugal}\\ 
+        $\rightsquigarrow_{bsubst}$ & $ \etatd{-, \mcc[\ua^{n+1} v][v], \mcd}$ & $|\mcd| + |\ua^{n+1}v| + |\mcc|+|v|$&$0\in fv(\mcc[\ua^{n+1} v])$\\ 
         \bottomrule
       \end{tabular}\\
-      La taille maximum utilisée est $S +|\mtd|$.
-    \item \underbar{Cas LSGC~:} Nous avons $\mtc\llbracket x\rrbracket[x/v]\rightarrow \mtc[v]$ avec comme hypothèse que $x\notin fv(\mtc[v])$. Donc $S = |\mtc|+|x|+|v|$.\\
+      La taille maximum utilisée est $S +|\mcd|$.
+    \item \underbar{Cas LSGC~:} Nous avons $\mtc\llbracket n\rrbracket[v]\rightarrow \da\mcc[\ua^{n+1} v]$ avec comme hypothèse que $0\notin fv(\mcc[\ua^{n+1} v])$. Donc $S = |\mcc|+|v| + max(|n|, |\ua^{n+1} v|)$.\\
       \begin{tabular}{@{}l c c c@{}}
         \toprule
         transition & état & taille & justification\\
         \midrule
-                   & $\etatz{-,\mtc\llbracket x\rrbracket[x/v],\mtd}$ & $|\mtd|+|v|+|\mtc|+|x|$\\
-        $\rightsquigarrow_{us}$ & $ \etatz{-, \mtc\llbracket x \rrbracket, \square[x/v]::\mtd}$ & $|\mtd| + |v| + |\mtc|+|x|$\\ 
-        $\rightsquigarrow^*$ & $ \etatz{-, x ,\mtc:: \square[x/v]::\mtd}$ & $|\mtd| + |v| + |\mtc|+|x|$& Lemme \ref{lemmaplouf}\\
-        $\rightsquigarrow_{ls}$ & $ \etatd{-, v ,\mtc:: \square[x/v]::\mtd}$ & $|\mtd| + |v| + |\mtc|+|v|$\\
-        $\rightsquigarrow^*$ & $ \etatd{-, \mtc[v], \square[x/v]::\mtd}$ & $|\mtd| + |v| + |\mtc| +|v|$ &Lemme \ref{lemmaportugal}\\ 
-        $\rightsquigarrow_{gc}$ & $ \etatd{-, \mtc[v], \mtd}$ & $|\mtd| + |v| + |\mtc|$& $x\notin fv(\mtc[v])$\\ 
+                   & $\etatz{-,\mcc\llbracket n\rrbracket[v],\mcd}$ & $|\mcd|+|v|+|\mcc|+|n|$\\
+        $\rightsquigarrow_{us}$ & $ \etatz{-, \mcc\llbracket n \rrbracket, \square[v]::\mcd}$ & $|\mcd| + |v| + |\mcc|+|n|$\\ 
+        $\rightsquigarrow^*$ & $ \etatz{-, n ,\mcc:: \square[v]::\mcd}$ & $|\mcd| + |v| + |\mcc|+|n|$& Lemme \ref{lemmaplouf}\\
+        $\rightsquigarrow_{ls}$ & $ \etatd{-, \ua^{n+1} v ,\mcc:: \square[v]::\mcd}$ & $|\mcd| + |v| + |\mcc|+|\ua^{n+1} v|$\\
+        $\rightsquigarrow^*$ & $ \etatd{-, \mcc[\ua^{n+1} v], \square[v]::\mcd}$ & $|\mcd| + |v| + |\mcc| +|\ua^{n+1} v|$ &Lemme \ref{lemmaportugal}\\ 
+        $\rightsquigarrow_{gc}$ & $ \etatd{-, \da \mcc[\ua^{n+1} v], \mcd}$ & $|\mcd| + |\da \mcc[\ua^{n+1} v]|$& $0\notin fv(\mcc[\ua^{n+1} v])$\\ 
         \bottomrule
       \end{tabular}\\
-      La taille maximum utilisée est $2 \times |v| + |\mtc| +|\mtd| \le 2\times S +|\mtd|$.
-    \item \underbar{Cas DB~:} Nous avons $\mtl[\lambda x.t]~v \rightarrow \mtl[t[x/v]]$ sous hypothèse que $x\in fv(t)$. Donc $S = |\mtl|+|v|+|t|+1$.\\
+      La taille maximum utilisée est $S+|\mcd|$.
+    \item \underbar{Cas DB~:} Nous avons $\mcl[\lambda t]~v \rightarrow \mcl[t[\ua^{k} v]]$ sous hypothèse que $0\in fv(t)$. Donc $S = |\mcl|+|t|+max(1+|v|, |\ua^k v|)$.\\
       \begin{tabular}{@{}l c c c@{}}
         \toprule
         transition & état & taille & justification\\
         \midrule
-                   & $\etatz{-,\mtl[\lambda x.t]~v,\mtd}$ & $|\mtd|+|v|+|\mtl|+|t|+1$\\
-        $\rightsquigarrow_{db}$ & $ \etatu{v, \mtl[ \lambda x.t], \mtd}$ & $|\mtd| + |v| + |\mtl|+|t|+1$\\ 
-        $\rightsquigarrow^*_{rdb}$ & $ \etatu{v, \lambda x.t ,\mtl::\mtd}$ & $|\mtd| + |v| + |\mtl|+|t|+1$& Lemme \ref{lemmaplouf2}\\
-        $\rightsquigarrow_{fdb}$ & $ \etatd{-, t ,\square[x/v]::\mtl::\mtd}$ & $|\mtd| + |v| + |\mtl|+|t|$\\
-        $\rightsquigarrow_{rsubst}$ & $ \etatd{-, t[x/v] ,\mtl::\mtd}$ & $|\mtd| +|v|+ |\mtl|+|t|$& $x\in fv(t)$\\
-        $\rightsquigarrow^*$ & $ \etatd{-, \mtl[t[x/v]],\mtd}$ & $|\mtd| + |v| + |\mtl|+|t|$ &Lemme \ref{lemmaportugal}\\ 
+                   & $\etatz{-,\mcl[\lambda t]~v,\mcd}$ & $|\mcd|+|v|+|\mcl|+|t|+1$\\
+        $\rightsquigarrow_{db}$ & $ \etatu{(v,0), \mcl[ \lambda t], \mcd}$ & $|\mcd| + |v| + |\mcl|+|t|+1$\\ 
+        $\rightsquigarrow^k_{rdb}$ & $ \etatu{(v,k), \lambda t ,\mtl::\mtd}$ & $|\mtd| + |v| + |\mtl|+|t|+|k|+1$& Lemme \ref{lemmaplouf2}\\
+        $\rightsquigarrow_{fdb}$ & $ \etatd{-, t ,\square[\ua^k v]::\mtl::\mtd}$ & $|\mtd| + |\ua^k v| + |\mtl|+|t|$\\
+        $\rightsquigarrow_{rsubst}$ & $ \etatd{-, t[\ua^k v] ,\mtl::\mtd}$ & $|\mtd| +|\ua^k v|+ |\mtl|+|t|$& $0 \in fv(t)$\\
+        $\rightsquigarrow^*$ & $ \etatd{-, \mtl[t[\ua^k v]],\mtd}$ & $|\mtd| + |v| + |\mtl|+|t|$ &Lemme \ref{lemmaportugal}\\ 
         \bottomrule
       \end{tabular}\\
-      La taille maximum utilisée est $S +|\mtd|$.
-    \item \underbar{Cas DBGC~:} Nous avons $\mtl[\lambda x.t]~v \rightarrow \mtl[t]$ sous hypothèse que $x\notin fv(t)$. Donc $S = |\mtl|+|v|+|t|+1$.\\
+      Le lemme \ref{lemmaplouf2} nous assure que la transition de la ligne deux vers la ligne trois ce fait dans un espace~:
+     \begin{align*} 
+       |\mtd|+ |v| + |\mtl|+|t|+|k|+1 &\le |\mtd| + |v| + |\mtl|+|t|+|\mtl|+1 \\
+        &\le 2 \times (|\mtl|+|t|+|v|+1)+|\mcd|\\ 
+        &= 2 \times S + |\mcd|
+     \end{align*}
+      De plus, les autres transitions se font en espace $S+|D|$.
+    \item \underbar{Cas DBGC~:} Nous avons $\mtl[\lambda t]~v \rightarrow \mtl[t]$ sous hypothèse que $0\notin fv(t)$. Donc $S = |\mcl|+|t|+max(1+|v|, |\ua^k v|)$.\\
       \begin{tabular}{@{}l c c c@{}}
         \toprule
         transition & état & taille & justification\\
         \midrule
-                   & $\etatz{-,\mtl[\lambda x.t]~v,\mtd}$ & $|\mtd|+|v|+|\mtl|+|t|+1$\\
-        $\rightsquigarrow_{db}$ & $ \etatu{v, \mtl[ \lambda x.t], \mtd}$ & $|\mtd| + |v| + |\mtl|+|t|+1$\\ 
-        $\rightsquigarrow^*_{rdb}$ & $ \etatu{v, \lambda x.t ,\mtl::\mtd}$ & $|\mtd| + |v| + |\mtl|+|t|+1$& Lemme \ref{lemmaplouf2}\\
-        $\rightsquigarrow_{fdb}$ & $ \etatd{-, t ,\square[x/v]::\mtl::\mtd}$ & $|\mtd| + |v| + |\mtl|+|t|$\\
+                  & $\etatz{-,\mcl[\lambda t]~v,\mcd}$ & $|\mcd|+|v|+|\mcl|+|t|+1$\\
+        $\rightsquigarrow_{db}$ & $ \etatu{(v,0), \mcl[ \lambda t], \mcd}$ & $|\mcd| + |v| + |\mcl|+|t|+1$\\ 
+        $\rightsquigarrow^k_{rdb}$ & $ \etatu{(v,k), \lambda t ,\mtl::\mtd}$ & $|\mtd| + |v| + |\mtl|+|t|+|k|+1$& Lemme \ref{lemmaplouf2}\\
+        $\rightsquigarrow_{fdb}$ & $ \etatd{-, t ,\square[\ua^k v]::\mtl::\mtd}$ & $|\mtd| + |\ua^k v| + |\mtl|+|t|$\\
         $\rightsquigarrow_{gc}$ & $ \etatd{-, t ,\mtl::\mtd}$ & $|\mtd| + |\mtl|+|t|$& $x\notin fv(t)$\\
         $\rightsquigarrow^*$ & $ \etatd{-, \mtl[t],\mtd}$ & $|\mtd| + |\mtl|+|t|$ &Lemme \ref{lemmaportugal}\\ 
         \bottomrule
       \end{tabular}\\
-      La taille maximum utilisée est $S +|\mtd|$.
-    \item \underbar{Cas GC~:} Nous avons $t[x/v] \rightarrow t'$ sous hypothèse que $t \rightarrow t'$ et $x\notin fv(t')$. Donc $S = max(|t[x/v]|, |t'|)$. Nous notons $S' = |t \rightarrow t'| = max(|t|, |t'|)$.\\
+      Une analyse similaire au celle du cas précédent nous assure que la réduction se fait dans un espace maximum $2\times S +|\mtd|$.
+    \item \underbar{Cas GC~:} Nous avons $t[x/v] \rightarrow \da t'$ sous hypothèse que $t \rightarrow t'$ et $0\notin fv(t')$. Donc $S = S'+|v|$. Nous notons $S' = |t \rightarrow t'| $.\\
       \begin{tabular}{@{}l c c c@{}}
         \toprule
         transition & état & taille & justification\\
         \midrule
-                   & $\etatz{-,t[x/v],\mtd}$ & $|\mtd|+|v|+|t|$\\
-        $\rightsquigarrow_{us}$ & $ \etatz{-, t, \square[x/v]::\mtd}$ & $|\mtd| + |v| + |t|$\\ 
-        $\rightsquigarrow^*$ & $ \etatd{-, t' ,\square[x/v]::\mtd}$ & $|\mtd| + |v| + |t'|$& Par hypothèse d'induction\\
-      $\rightsquigarrow_{gc}$ & $ \etatd{-, t' ,\mtd}$ & $|\mtd| + |t'|$&$ x\notin fv(t') $\\
+                   & $\etatz{-,t[v],\mtd}$ & $|\mtd|+|v|+|t|$\\
+        $\rightsquigarrow_{us}$ & $ \etatz{-, t, \square[v]::\mtd}$ & $|\mtd| + |v| + |t|$\\ 
+        $\rightsquigarrow^*$ & $ \etatd{-, t' ,\square[v]::\mtd}$ & $|\mtd| + |v| + |t'|$& Par hypothèse d'induction\\
+      $\rightsquigarrow_{gc}$ & $ \etatd{-, \da t' ,\mtd}$ & $|\mtd| + |\da t'|$&$ 0\notin fv(t') $\\
         \bottomrule
       \end{tabular}\\
-      Notre hypothèse d'induction indique également que la transition de la deuxième ligne vers la troisième ligne se fait avec un espace $ k \times S' +|\mtd| + |v|$ pour une certaine constante $k\ge1$. 
-      Nous devons distinguer trois cas.
-      \begin{itemize}
-        \item \underbar{Cas $S = S' = |t'|$~:}
-          \begin{align*}
-            k \times S' + |\mtd| + |v|  &\le k \times S'+|\mtd|+|t'|  \quad \text{par définition de $S$}\\
-            &= (k+1) \times S' +|\mtd| \\ 
-            &= (k+1)\times S +|\mtd|
-          \end{align*}
-        \item \underbar{Cas $S' = |t|$ et $S = |t| + |v|$~:}
-          \begin{align*}
-            k \times S' + |v| + |\mtd| &\le k \times (S' + |v|) + |\mtd| \\
-                                       & = k \times S + |\mtd|
-          \end{align*}
-        \item \underbar{Cas $S' = |t'|$ et $S = |t| + |v|$~:}
-          \begin{align*}
-            k \times S' + |\mtd| + |v|  &=  k \times |t'|+|\mtd|+|v|\\
-                                        &= k \times S + |v| +|\mtd| \quad \text{Car $S \ge |t'|$ par définition.} \\ 
-            &= (k+1)\times S +|\mtd|
-          \end{align*}
-      \end{itemize}
-    \item \underbar{Cas US~:} Nous avons $t[x/v] \rightarrow t'[x/v]$ sous hypothèse que $x\in fv(t')$ et  $t\rightarrow t'$. Donc $S = S'+|v|$ avec $S' = max(|t|, |t'|) = | t \rightarrow t'|$.\\
+      Notre hypothèse d'induction indique également que la transition de la deuxième ligne vers la troisième ligne se fait avec un espace: 
+      \begin{align*}
+        2 \times S' +|\mtd| + |v| &\le 2\times(S'+|v|) +|\mtd|\\ 
+                                  &= 2 \times S + |\mtd|
+       \end{align*}
+Comme $|t| \le S'$ et $|\da t'|\le|t'| \le S'$, les autres transitions s'effectuent dans un espace $S+|\mtd|$.
+      % Nous devons distinguer trois cas.
+      % \begin{itemize}
+      %   \item \underbar{Cas $S = S' = |t'|$~:}
+      %     \begin{align*}
+      %       k \times S' + |\mtd| + |v|  &\le k \times S'+|\mtd|+|t'|  \quad \text{par définition de $S$}\\
+      %       &= (k+1) \times S' +|\mtd| \\ 
+      %       &= (k+1)\times S +|\mtd|
+      %     \end{align*}
+      %   \item \underbar{Cas $S' = |t|$ et $S = |t| + |v|$~:}
+      %     \begin{align*}
+      %       k \times S' + |v| + |\mtd| &\le k \times (S' + |v|) + |\mtd| \\
+      %                                  & = k \times S + |\mtd|
+      %     \end{align*}
+      %   \item \underbar{Cas $S' = |t'|$ et $S = |t| + |v|$~:}
+      %     \begin{align*}
+      %       k \times S' + |\mtd| + |v|  &=  k \times |t'|+|\mtd|+|v|\\
+      %                                   &= k \times S + |v| +|\mtd| \quad \text{Car $S \ge |t'|$ par définition.} \\ 
+      %       &= (k+1)\times S +|\mtd|
+      %     \end{align*}
+      % \end{itemize}
+    \item \underbar{Cas US~:} Nous avons $t[v] \rightarrow t'[v]$ sous hypothèse que $0\in fv(t')$ et  $t\rightarrow t'$. Donc $S = S'+|v|$ avec $S' = | t \rightarrow t'|$.\\
       \begin{tabular}{@{}l c c c@{}}
         \toprule
         transition & état & taille & justification\\
         \midrule
-                   & $\etatz{-,t[x/v],\mtd}$ & $|\mtd|+|v|+|t|$\\
-        $\rightsquigarrow_{us}$ & $ \etatz{-, t, \square[x/v]:: \mtd}$ & $|\mtd| + |v| +|t|$\\ 
-        $\rightsquigarrow^*$ & $ \etatd{-, t' ,\square[x/v]::\mtd}$ & $|v| + |\mtd|+|t'|$& Par hypothèse d'induction\\
-        $\rightsquigarrow^*$ & $ \etatd{-, t'[x/v], \mtd}$ & $|v| + |\mtd|+|t'|$&$x \in fv(t')$\\
+                   & $\etatz{-,t[x/v],\mcd}$ & $|\mcd|+|v|+|t|$\\
+        $\rightsquigarrow_{us}$ & $ \etatz{-, t, \square[x/v]:: \mcd}$ & $|\mcd| + |v| +|t|$\\ 
+        $\rightsquigarrow^{*}$ & $ \etatd{-, t' ,\square[x/v]::\mcd}$ & $|v| + |\mcd|+|t'|$& Par hypothèse d'induction \\
+        $\rightsquigarrow^{*}$ & $ \etatd{-, t'[x/v], \mcd}$ & $|v| + |\mcd|+|t'|$&$x \in fv(t')$\\
         \bottomrule
       \end{tabular}\\
-      Notre hypothèse nous assure que la transition de la deuxième ligne vers la troisième ligne se fait avec un espace $ k \times S' +|\mtd| + |v|$ avec $k\ge 1$. 
-      La taille maximum utilisée est $k \times S' +|\mtd|+|v| \le k \times (S'+|v|)+|\mtd| = k \times S + |\mtd|$.
-    \item \underbar{Cas LA~:} Nous avons $t~u \rightarrow t'~u$ sous hypothèse que $t\rightarrow t'$. Donc $S = S'+|u|$ avec $S' = max(|t|, |t'|) = | t \rightarrow t'|$.\\
+      Une analyse similaire au celle du cas précédent nous assure que la réduction se fait dans un espace maximum $2\times S +|\mtd|$.
+    \item \underbar{Cas LA~:} Nous avons $t~u \rightarrow t'~u$ sous hypothèse que $t\rightarrow t'$. Donc $S = S'+|u|$ avec $S' = | t \rightarrow t'|$.\\
       \begin{tabular}{@{}l c c c@{}}
         \toprule
         transition & état & taille & justification\\
@@ -512,15 +557,24 @@ en utilisant un espace $|\mtd|+|t|+|\mtl|+|u|$
         $\rightsquigarrow^*$ & $ \etatz{-, t'~u, \mtd}$ & $|u| + |\mtd|+|t'|$\\
         \bottomrule
       \end{tabular}\\
-      Notre hypothèse nous affirme que la transition de la deuxième ligne vers la troisième ligne se fait avec un espace $ k \times S' +|\mtd| + |u|$ avec $k\ge 1$. 
-      La taille maximum utilisée est $k \times S' +|\mtd|+|u| \le k \times (S'+|u|)+|\mtd| = k \times S + |\mtd|$.
+      Notre hypothèse nous affirme que la transition de la deuxième ligne vers la troisième ligne se fait avec un espace $ 2 \times S' +|\mtd| + |u|$ . 
+      La taille maximum utilisée est $2 \times S' +|\mtd|+|u| \le 2 \times (S'+|u|)+|\mtd| = 2 \times S + |\mtd|$.
     \item \underbar{Cas RA~:} Analogue au cas précédent.
   \end{itemize}
 \end{proof}
 
-\begin{theorem}[FLAME simule le LSC en appel par valeur]
-  Ennoncé du gros théorème
+\begin{theorem}[FLAME simule LS(G)C]
+  Soient $t$ un terme propre et $\rho$ sa séquence de réduction. 
+  \begin{enumerate}
+    \item Si $\rho$ diverge, alors la réduction de $\etatz{-, t, \square}$ diverge. 
+    \item Si $\rho$ termine sur une valeur $u$, alors $\etatz{-, t, \square} \rsa^{*} \etatt{-, u, \square}$
+    \item L'espace pris par la réduction du point 2 est $2 \times |\rho| = 2 \times |t \ra^* u|$
+  \end{enumerate}
+
 \end{theorem}
+\begin{proof}
+  Par application successive du lemme \ref{lem:sim}.
+\end{proof}
 
 \subsection{Simulation de FLAME par les machines de Turing}
 
@@ -563,8 +617,8 @@ a_{|t} &= a\\
 \end{definition}
 
 \section*{Annexe}
-
-\begin{figure}[ht]
+\begin{figure}[h]
+\label{FLAME}
 \centering
 \resizebox{\textwidth}{!}{%
 \begin{tabular}{@{}l l l l l l l l l l@{}}
@@ -572,27 +626,26 @@ a_{|t} &= a\\
 \textbf{arg} & \textbf{terme} & \textbf{contexte} & \textbf{état} & \textbf{transition}& \textbf{arg} & \textbf{terme} & \textbf{contexte} & \textbf{état} \\
 \midrule
 
-– & $t[ u ] $ & $C$ & 0 & $\rightarrow_{us}$ & – & $t$ & $\textsf{LS}(u) :: C$ & 0  \\
+– & $t[ u ] $ & $\mcc$ & 0 & $\rsa_{us}$ & – & $t$ & $\textsf{LS}(u) :: \mcc$ & 0  \\
 
-- & $t~u$ & $C$ & 0 & $\rightarrow_{lapp}$ & – & $t$ & $\textsf{RA}(u) :: C$ & 0  \\
-- & $v~t$ & $C$ & 0 & $\rightarrow_{rapp}$ & – & $t$ & $\textsf{LA}(v) :: C$ & 0  \\
-- & $n$  & $C$ & 0 & $\rightarrow_{ls}$ & - & $\uparrow^{n+1} t$ & $C$ & 2 & $\textsf{LS}(t)=\textsf{nth\_subst}(C)$ \\
-- & $v_1~v_2$  & $C$ & 0 & $\rightarrow_{db}$ & $(v_2,0)$ & $v_1$ & $C$ & 1  \\
+- & $t~u$ & $\mcc$ & 0 & $\rsa_{lapp}$ & – & $t$ & $\textsf{RA}(u) ::\mcc$ & 0  \\
+- & $v~t$ & $\mcc$ & 0 & $\rsa_{rapp}$ & – & $t$ & $\textsf{LA}(v) :: \mcc$ & 0  \\
+- & $n$  & $\mcc$ & 0 & $\rsa_{ls}$ & - & $\uparrow^{n+1} t$ & $\mcc$ & 2 & $\textsf{LS}(t)=\textsf{nth\_subst}(\mcc)$ \\
+- & $v_1~v_2$  & $\mcc$ & 0 & $\rsa_{db}$ & $(v_2,0)$ & $v_1$ & $\mcc$ & 1  \\
 
-$(v_2, n)$ & $v_1[ t ]$ &$C$ & 1 & $\rightarrow_{rdb}$ & $(v_2, n+1)$ & $v_1$ & $\textsf{LS}(t) :: C$ & 1\\ 
-$(v, n)$ & $\lambda.t $ &$C$ & 1 & $\rightarrow_{fdb}$ & - & $t$ & $\textsf{LS}(\uparrow^{n}v) :: C$ & 2\\
-
--&$v$ & $[]$ & 2 & $\rightarrow_{stop}$ & -& $v$ &$[]$ & 3 \\
--&$t$ & $[]$ & 2 & $\rightarrow_{dive}$ & -& $t$ &$[]$ & 0 \\
--&$t$ & $\textsf{LS}(u) :: C$ & 2 & $\rightarrow_{gc}$ & -& $\downarrow t$ &$C$ & 2 & $0\notin \textsf{fv}(t)$ \\
--&$t$ & $\textsf{LS}(u) :: C$ & 2 & $\rightarrow_{bsubst}$ & -& $t[ u ]$ &$C$ & 2 & $0\in \textsf{fv}(t)$ \\
--&$t$ & $\textsf{RA}(u) :: C$ & 2 & $\rightarrow_{blapp}$ & -& $t~u$ &$C$ & 2 \\
--&$t$ & $\textsf{LA}(u) :: C$ & 2 & $\rightarrow_{brapp}$ & -& $u~t$ &$C$ & 2 \\
+$(v_2, n)$ & $v_1[ t ]$ &$\mcc$ & 1 & $\rsa_{rdb}$ & $(v_2, n+1)$ & $v_1$ & $\textsf{LS}(t) :: \mcc$ & 1\\ 
+$(v, n)$ & $\lambda.t $ &$\mcc$ & 1 & $\rsa_{fdb}$ & - & $t$ & $\textsf{LS}(\uparrow^{n}v) :: \mcc$ & 2 & $0\in fv(t)$\\
+-&$v$ & $[]$ & 2 & $\rsa_{stop}$ & -& $v$ &$[]$ & 3 \\
+-&$t$ & $[]$ & 2 & $\rsa_{dive}$ & -& $t$ &$[]$ & 0 \\
+-&$t$ & $\textsf{LS}(u) :: \mcc$ & 2 & $\rsa_{gc}$ & -& $\downarrow t$ &$\mcc$ & 2 & $0\notin \textsf{fv}(t)$ \\
+-&$t$ & $\textsf{LS}(u) :: \mcc$ & 2 & $\rsa_{bsubst}$ & -& $t[ u ]$ &$\mcc$ & 2 & $0\in \textsf{fv}(t)$ \\
+-&$t$ & $\textsf{RA}(u) :: \mcc$ & 2 & $\rsa_{blapp}$ & -& $t~u$ &$\mcc$ & 2 \\
+-&$t$ & $\textsf{LA}(u) :: \mcc$ & 2 & $\rsa_{brapp}$ & -& $u~t$ &$\mcc$ & 2 \\
 
 \bottomrule
 \end{tabular}
 }
-\caption{Transitions de la FLAME.}
+\caption{Transitions de FLAME.}
 \end{figure}
 \end{document}
 
